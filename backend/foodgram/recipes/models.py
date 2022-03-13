@@ -1,6 +1,7 @@
 from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.core.validators import MinValueValidator
 
 User = get_user_model()
 
@@ -29,7 +30,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='recipes'
+        related_name='recipes',
     )
     name = models.CharField(max_length=200)
     image = models.ImageField(
@@ -38,12 +39,16 @@ class Recipe(models.Model):
         blank=True
     )
     text = models.TextField()
-    cooking_time = models.IntegerField(min=1)
+    cooking_time = models.IntegerField(
+        validators=[MinValueValidator(1)]
+    )
     tags = models.ForeignKey(
         Tags,
+        on_delete=models.PROTECT,
         related_name='recipes'
     )
     ingredients = models.ForeignKey(
         Ingredients,
+        on_delete=models.PROTECT,
         related_name='recipes'
     )
