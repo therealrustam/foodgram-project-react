@@ -9,14 +9,16 @@ app_name = 'api'
 router = DefaultRouter()
 router1 = DefaultRouter()
 
-router.register('users', UsersViewSet)
-router.register('tags', TagsViewSet)
-router.register('recipes', RecipesViewSet)
-router.register('ingredients', IngredientsViewSet)
-router1.register('shopping_cart', CartViewSet)
-router1.register('favorite', FavoriteViewSet)
+router.register('users', UsersViewSet, basename='users')
+router.register('tags', TagsViewSet, basename='tags')
+router.register('recipes', RecipesViewSet, basename='recipes')
+router.register('ingredients', IngredientsViewSet, basename='ingredients')
+router1.register('shopping_cart', CartViewSet, basename='shopping_cart')
+router1.register('favorite', FavoriteViewSet, basename='favorite')
 
 urlpatterns = [
     path('/', include(router.urls)),
     path('recipes/<int:post_id>/', include(router1.urls)),
+    path('/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt')),
 ]
