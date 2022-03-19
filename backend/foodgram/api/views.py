@@ -1,20 +1,24 @@
-from django.shortcuts import render
+from recipes.models import Follow, Ingredient, Recipe, Tag
 from rest_framework import filters, status, views, viewsets
 
+from .serializers import (FollowSerializer, IngredientSerializer,
+                          RecipeSerializer, TagSerializer)
 
-class UsersViewSet(viewsets.ModelViewSet):
+
+class UserViewSet(viewsets.ModelViewSet):
     pass
 
 
-class TagsViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
     pass
 
 
-class RecipesViewSet(viewsets.ModelViewSet):
-    pass
-
-
-class IngredientsViewSet(viewsets.ModelViewSet):
+class IngredientViewSet(viewsets.ModelViewSet):
     pass
 
 

@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator
 User = get_user_model()
 
 
-class Ingredients(models.Model):
+class Ingredient(models.Model):
     """
     Создание модели продуктов.
     """
@@ -14,7 +14,7 @@ class Ingredients(models.Model):
     measurement_unit = models.CharField(max_length=200)
 
 
-class Tags(models.Model):
+class Tag(models.Model):
     """
     Создание модели тэгов.
     """
@@ -43,12 +43,32 @@ class Recipe(models.Model):
         validators=[MinValueValidator(1)]
     )
     tags = models.ForeignKey(
-        Tags,
-        on_delete=models.PROTECT,
-        related_name='recipes'
+        Tag,
+        on_delete=models.SET_NULL,
+        related_name='recipes',
+        null=True,
+        blank=True,
     )
     ingredients = models.ForeignKey(
-        Ingredients,
-        on_delete=models.PROTECT,
-        related_name='recipes'
+        Ingredient,
+        on_delete=models.SET_NULL,
+        related_name='recipes',
+        null=True,
+        blank=True,
+    )
+
+
+class Follow(models.Model):
+    """
+    Модель подписок.
+    """
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+    )
+    following = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
     )
