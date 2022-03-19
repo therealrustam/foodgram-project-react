@@ -13,9 +13,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 from datetime import timedelta
 
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,13 +27,10 @@ SECRET_KEY = '%mrc%(17o5jdd2$xunh19h)7mg9ys79ue)-79w$hjz@^%^pja0'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 INSTALLED_APPS = [
-    'recipes',
-    'api',
-    'users',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,6 +40,9 @@ INSTALLED_APPS = [
     'colorfield',
     'rest_framework',
     'djoser',
+    'recipes',
+    'api',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -84,19 +81,9 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'mydatabase',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-# DATABASES = {
-#    'default': {
-#        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-#        'NAME': os.getenv('DB_NAME'),
-#        'USER': os.getenv('POSTGRES_USER'),
-#        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-#        'HOST': os.getenv('DB_HOST'),
-#        'PORT': os.getenv('DB_PORT'),
-#    }
-# }
 
 
 # Password validation

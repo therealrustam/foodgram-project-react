@@ -34,7 +34,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(max_length=200)
     image = models.ImageField(
-        'Картинка',
+        'Изображение',
         upload_to='recipes/',
         blank=True
     )
@@ -42,19 +42,15 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)]
     )
-    tags = models.ForeignKey(
+    tag = models.ForeignKey(
         Tag,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='recipes',
-        null=True,
-        blank=True,
     )
-    ingredients = models.ForeignKey(
+    ingredient = models.ForeignKey(
         Ingredient,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='recipes',
-        null=True,
-        blank=True,
     )
 
 
