@@ -15,11 +15,13 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
 
 
 class CartViewSet(viewsets.ModelViewSet):
