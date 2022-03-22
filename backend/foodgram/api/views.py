@@ -1,12 +1,17 @@
 from recipes.models import Follow, Ingredient, Recipe, Tag
-from rest_framework import filters, status, views, viewsets
+from rest_framework import filters, permissions, status, views, viewsets
+from rest_framework.generics import CreateAPIView
+from users.models import User
 
 from .serializers import (FollowSerializer, IngredientSerializer,
-                          RecipeSerializer, TagSerializer)
+                          RecipeSerializer, RegistrationSerializer,
+                          TagSerializer)
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    pass
+class CreateUserView(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegistrationSerializer
 
 
 class TagViewSet(viewsets.ModelViewSet):

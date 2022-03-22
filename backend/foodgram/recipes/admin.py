@@ -1,13 +1,14 @@
 from django.contrib import admin
 
 from .models import Follow, Ingredient, Recipe, Tag
+from users.models import User
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email')
-    search_fields = ('name',)
+    list_display = ('username', 'email')
+    search_fields = ('username',)
     empty_value_display = '-пусто-'
-    list_filter = ('name',)
+    list_filter = ('username',)
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -39,6 +40,7 @@ class FollowAdmin(admin.ModelAdmin):
     list_filter = ('user',)
 
 
+admin.site.register(User, UserAdmin)
 admin.site.register(Follow, FollowAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
