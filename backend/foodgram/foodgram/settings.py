@@ -36,13 +36,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'colorfield',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
     'recipes',
     'api',
     'users',
+    'colorfield',
 ]
 
 MIDDLEWARE = [
@@ -144,6 +144,12 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+}
+
+DJOSER = {
+    'SERIALIZERS': {
+        'user_create': 'api.serializer.RegistrationSerializer'
+    }
 }
 
 AUTH_USER_MODEL = 'users.User'

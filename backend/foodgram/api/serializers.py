@@ -1,28 +1,30 @@
+from djoser.serializers import \
+    UserCreateSerializer as BaseUserRegistrationSerializer
+from recipes.models import Follow, Ingredient, Recipe, Tag
 from rest_framework import serializers
-
-from recipes.models import Ingredient, Tag, Recipe, Follow
 from users.models import User
 
 
-class RegistrationSerializer(serializers.ModelSerializer):
+class RegistrationSerializer(BaseUserRegistrationSerializer):
 
-    class Meta:
+    class Meta(BaseUserRegistrationSerializer.Meta):
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email',
+                  'first_name', 'last_name', 'password')
         write_only_fields = ('password',)
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'required': True}}
 
-    def create(self, validated_data):
-        user = User.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-            password=validated_data['password']
-        )
-        user.save()
-        return user
+    # def create(self, validated_data):
+    #    user = User.objects.create(
+    #        username=validated_data['username'],
+    #        email=validated_data['email'],
+    #        first_name=validated_data['first_name'],
+    #        last_name=validated_data['last_name'],
+    #        password=validated_data['password']
+    #    )
+    #    user.save()
+     #   return user
 
 
 class IngredientSerializer(serializers.ModelSerializer):
