@@ -13,7 +13,6 @@ class RegistrationSerializer(BaseUserRegistrationSerializer):
                   'first_name', 'last_name', 'password')
         write_only_fields = ('password',)
         read_only_fields = ('id',)
-        extra_kwargs = {'password': {'required': True}}
 
 
 class IngredientSerializer(serializers.ModelSerializer):
