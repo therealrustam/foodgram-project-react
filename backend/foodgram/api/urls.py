@@ -18,7 +18,6 @@ router1.register('favorite', FavoriteViewSet, basename='favorite')
 urlpatterns = [
     path('', include(router.urls)),
     path('recipes/<int:post_id>/', include(router1.urls)),
-    path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
 
 ]

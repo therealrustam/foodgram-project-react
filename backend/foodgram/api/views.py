@@ -1,3 +1,4 @@
+from djoser.views import UserViewSet
 from recipes.models import Follow, Ingredient, Recipe, Tag
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import action
@@ -10,13 +11,13 @@ from .serializers import (FollowSerializer, IngredientSerializer,
                           TagSerializer)
 
 
-class CreateUserView(viewsets.ModelViewSet):
+class CreateUserView(UserViewSet):
     queryset = User.objects.all()
-    permission_classes = [permissions.AllowAny]
     serializer_class = RegistrationSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
