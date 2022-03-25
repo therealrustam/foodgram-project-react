@@ -17,9 +17,27 @@ class CreateUserView(UserViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
+class FollowViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Класс вьюсет подписок.
+    """
+    serializer_class = FollowSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('following__username',)
+    http_method_names = ['get', 'post']
+
+    def get_queryset(self):
+        return self.request.user.follower.all()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

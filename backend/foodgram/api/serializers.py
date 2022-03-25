@@ -2,6 +2,7 @@ from djoser.serializers import \
     UserCreateSerializer as BaseUserRegistrationSerializer
 from recipes.models import Follow, Ingredient, Recipe, Tag
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from users.models import User
 
 
@@ -29,6 +30,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    author = RegistrationSerializer()
+    tags = TagSerializer()
+    ingredients = IngredientSerializer()
 
     class Meta:
         model = Recipe
@@ -36,7 +40,28 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор модели подписок.
+    """
+    user = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all(),
+        default=serializers.CurrentUserDefault())
+
+    following = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all())
 
     class Meta:
         model = Follow
         fields = '__all__'
+        validators = [UniqueTogetherValidator(
+            queryset=Follow.objects.all(),
+            fields=['user', 'following']), ]
+
+    def validate(self, data):
+        if data['user'] == data['following']:
+            raise serializers.ValidationError(
+                'Нельзя подписываться на себя!'
+            )
+        return data

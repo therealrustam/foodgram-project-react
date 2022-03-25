@@ -10,6 +10,11 @@ class Ingredient(models.Model):
     """
     name = models.CharField(max_length=200)
     measurement_unit = models.CharField(max_length=200)
+    amount = models.IntegerField(default=1,
+                                 validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        return self.name
 
 
 class Tag(models.Model):
@@ -19,6 +24,9 @@ class Tag(models.Model):
     name = models.CharField(max_length=200)
     color = ColorField(format='hex')
     slug = models.SlugField(max_length=200, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):
@@ -40,16 +48,19 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)]
     )
-    tag = models.ForeignKey(
+    tags = models.ForeignKey(
         Tag,
         on_delete=models.CASCADE,
         related_name='recipes',
     )
-    ingredient = models.ForeignKey(
+    ingredients = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         related_name='recipes',
     )
+
+    def __str__(self):
+        return self.name
 
 
 class Follow(models.Model):
