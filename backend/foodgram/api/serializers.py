@@ -7,12 +7,18 @@ from users.models import User
 
 
 class RegistrationSerializer(BaseUserRegistrationSerializer):
-    class Meta(BaseUserRegistrationSerializer.Meta):
+
+    class Meta():
         model = User
         fields = ('id', 'username', 'email',
                   'first_name', 'last_name', 'password')
         write_only_fields = ('password',)
         read_only_fields = ('id',)
+
+    def to_representation(self, obj):
+        rep = super(RegistrationSerializer, self).to_representation(obj)
+        rep.pop('password', None)
+        return rep
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -31,8 +37,8 @@ class TagSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     author = RegistrationSerializer()
-    tags = TagSerializer()
-    ingredients = IngredientSerializer()
+    tags = TagSerializer(many=True)
+    ingredients = IngredientSerializer(many=True)
 
     class Meta:
         model = Recipe

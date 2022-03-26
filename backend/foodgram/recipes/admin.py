@@ -1,7 +1,18 @@
 from django.contrib import admin
-
-from .models import Follow, Ingredient, Recipe, Tag
 from users.models import User
+
+from .models import (Follow, Ingredient, Recipe,
+                     Tag, IngredientRecipe, TagRecipe)
+
+
+class IngredientRecipeInline(admin.TabularInline):
+    model = IngredientRecipe
+    extra = 1
+
+
+class TagRecipeInline(admin.TabularInline):
+    model = TagRecipe
+    extra = 1
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -26,8 +37,9 @@ class TagAdmin(admin.ModelAdmin):
 
 
 class RecipeAdmin(admin.ModelAdmin):
+    inlines = (IngredientRecipeInline, TagRecipeInline,)
     list_display = ('name', 'author', 'text',
-                    'cooking_time', 'tags', 'ingredients')
+                    'cooking_time',)
     search_fields = ('name',)
     empty_value_display = '-пусто-'
     list_filter = ('name',)

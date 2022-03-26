@@ -41,23 +41,17 @@ class Recipe(models.Model):
     name = models.CharField(max_length=200)
     image = models.ImageField(
         'Изображение',
-        upload_to='recipes/',
+        upload_to='static/images/recipes/',
         blank=True
     )
     text = models.TextField()
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)]
     )
-    tags = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        related_name='recipes',
-    )
-    ingredients = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-        related_name='recipes',
-    )
+    tags = models.ManyToManyField(
+        Tag, through='TagRecipe')
+    ingredients = models.ManyToManyField(
+        Ingredient, through='IngredientRecipe')
 
     def __str__(self):
         return self.name
@@ -77,3 +71,19 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='following',
     )
+
+
+class IngredientRecipe(models.Model):
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.ingredient} {self.recipe}'
+
+
+class TagRecipe(models.Model):
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.tag} {self.recipe}'

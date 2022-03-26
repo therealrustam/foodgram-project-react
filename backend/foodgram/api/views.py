@@ -14,7 +14,12 @@ from .serializers import (FollowSerializer, IngredientSerializer,
 class CreateUserView(UserViewSet):
     queryset = User.objects.all()
     serializer_class = RegistrationSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.AllowAny]
+
+    def list(self, request):
+        queryset = User.objects.all()
+        serializer = RegistrationSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class FollowViewSet(viewsets.ReadOnlyModelViewSet):
