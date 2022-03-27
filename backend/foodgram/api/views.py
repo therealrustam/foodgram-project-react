@@ -64,3 +64,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     queryset = Favorite.objects.all()
     serializer_class = FavoriteSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class DownloadViewSet():
+    pass

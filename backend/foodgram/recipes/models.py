@@ -52,6 +52,8 @@ class Recipe(models.Model):
         Tag, through='TagRecipe')
     ingredients = models.ManyToManyField(
         Ingredient, through='IngredientRecipe')
+    is_favorited = models.BooleanField(default=False)
+    is_in_shopping_cart = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
