@@ -1,6 +1,7 @@
+from django.shortcuts import get_object_or_404
 from djoser.serializers import \
     UserCreateSerializer as BaseUserRegistrationSerializer
-from recipes.models import Follow, Ingredient, Recipe, Tag
+from recipes.models import Follow, Ingredient, Recipe, Tag, Favorite, Cart
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import User
@@ -33,6 +34,34 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'cooking_time')
+
+    def create(self, validated_data):
+        request = self.context.get('request', None)
+        user = get_object_or_404(User, id=request.user.id)
+        recipe = get_object_or_404(Recipe, **validated_data)
+        Favorite.objects.create(user=user, recipes=recipe)
+        return user
+
+
+class CartSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'cooking_time')
+
+    def create(self, validated_data):
+        request = self.context.get('request', None)
+        user = get_object_or_404(User, id=request.user.id)
+        recipe = get_object_or_404(Recipe, **validated_data)
+        Cart.objects.create(user=user, recipe=recipe)
+        return user
 
 
 class RecipeSerializer(serializers.ModelSerializer):

@@ -57,6 +57,18 @@ class Recipe(models.Model):
         return self.name
 
 
+class Cart(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
+    recipes = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='carts',
+    )
+
+
 class Follow(models.Model):
     """
     Модель подписок.
@@ -87,3 +99,15 @@ class TagRecipe(models.Model):
 
     def __str__(self):
         return f'{self.tag} {self.recipe}'
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
+    recipes = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+    )

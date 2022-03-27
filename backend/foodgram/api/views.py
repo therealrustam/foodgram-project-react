@@ -1,5 +1,5 @@
 from djoser.views import UserViewSet
-from recipes.models import Follow, Ingredient, Recipe, Tag
+from recipes.models import Follow, Ingredient, Recipe, Tag, Favorite, Cart
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
@@ -8,7 +8,7 @@ from users.models import User
 
 from .serializers import (FollowSerializer, IngredientSerializer,
                           RecipeSerializer, RegistrationSerializer,
-                          TagSerializer)
+                          TagSerializer, FavoriteSerializer, CartSerializer)
 
 
 class CreateUserView(UserViewSet):
@@ -56,8 +56,11 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 
 class CartViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Favorite.objects.all()
+    serializer_class = FavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
