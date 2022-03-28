@@ -71,14 +71,14 @@ class Cart(models.Model):
     )
 
 
-class Follow(models.Model):
+class Subscribe(models.Model):
     """
     Модель подписок.
     """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='follower',
+        related_name='author',
     )
     following = models.ForeignKey(
         User,

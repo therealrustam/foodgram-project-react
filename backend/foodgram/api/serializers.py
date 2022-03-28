@@ -1,7 +1,8 @@
 from django.shortcuts import get_object_or_404
 from djoser.serializers import \
     UserCreateSerializer as BaseUserRegistrationSerializer
-from recipes.models import Follow, Ingredient, Recipe, Tag, Favorite, Cart
+from drf_extra_fields.fields import Base64ImageField
+from recipes.models import Cart, Favorite, Ingredient, Recipe, Subscribe, Tag
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import User
@@ -65,38 +66,43 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    author = RegistrationSerializer()
+    """Сериализатор для модели Recipe.
+    """
+    author = RegistrationSerializer(read_only=True)
     tags = TagSerializer(many=True)
     ingredients = IngredientSerializer(many=True)
+    image = Base64ImageField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
-        fields = '__all__'
+        fields = ('id', 'author', 'name', 'image', 'text', 'ingredients',
+                  'tags', 'cooking_time', 'is_in_shopping_cart', 'is_favorited')
+
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        recipe_id = self.context.get('id')
+        recipe = Recipe.objects.filter(id=recipe_id)
+        if Favorite.objects.filter(user=request.user, recipes=recipe).exists:
+            return True
+        else:
+            return False
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        recipe_id = self.context.get('id')
+        recipe = Recipe.objects.filter(id=recipe_id)
+        if Cart.objects.filter(user=request.user, recipes=recipe).exists:
+            return True
+        else:
+            return False
 
 
-class FollowSerializer(serializers.ModelSerializer):
+class SubscribeSerializer(serializers.Serializer):
     """
     Сериализатор модели подписок.
     """
-    user = serializers.SlugRelatedField(
-        slug_field='username',
-        queryset=User.objects.all(),
-        default=serializers.CurrentUserDefault())
-
-    following = serializers.SlugRelatedField(
-        slug_field='username',
-        queryset=User.objects.all())
-
     class Meta:
-        model = Follow
+        model = Subscribe
         fields = '__all__'
-        validators = [UniqueTogetherValidator(
-            queryset=Follow.objects.all(),
-            fields=['user', 'following']), ]
-
-    def validate(self, data):
-        if data['user'] == data['following']:
-            raise serializers.ValidationError(
-                'Нельзя подписываться на себя!'
-            )
-        return data

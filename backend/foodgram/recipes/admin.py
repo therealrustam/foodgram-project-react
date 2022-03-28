@@ -1,7 +1,7 @@
 from django.contrib import admin
 from users.models import User
 
-from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
+from .models import (Cart, Favorite, Subscribe, Ingredient, IngredientRecipe,
                      Recipe, Tag, TagRecipe)
 
 
@@ -59,7 +59,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('name',)
 
 
-class FollowAdmin(admin.ModelAdmin):
+class SubscribeAdmin(admin.ModelAdmin):
     list_display = ('user', 'following')
     search_fields = ('user',)
     empty_value_display = '-пусто-'
@@ -69,7 +69,7 @@ class FollowAdmin(admin.ModelAdmin):
 admin.site.register(Cart, CartAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(User, UserAdmin)
-admin.site.register(Follow, FollowAdmin)
+admin.site.register(Subscribe, SubscribeAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Recipe, RecipeAdmin)
