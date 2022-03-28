@@ -37,18 +37,28 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'cooking_time')
+class FavoriteSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    cooking_time = serializers.IntegerField()
 
     def create(self, validated_data):
-        request = self.context.get('request', None)
-        user = get_object_or_404(User, id=request.user.id)
-        recipe = get_object_or_404(Recipe, **validated_data)
-        Favorite.objects.create(user=user, recipes=recipe)
-        return user
+        request = self.context.get('request')
+        #user = get_object_or_404(User, id=request.user.id)
+        id_data = validated_data.pop('id')
+        recipe = get_object_or_404(Recipe, id=id_data)
+        Favorite.objects.create(
+            user_id=request.user.id, recipes_id=id_data)
+        return recipe
+
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        #user = get_object_or_404(User, id=request.user.id)
+        id_data = validated_data.pop('id')
+        recipe = get_object_or_404(Recipe, id=id_data)
+        favorite = Favorite.objects.delete(
+            user_id=request.user.id, recipes_id=id_data)
+        return recipe
 
 
 class CartSerializer(serializers.ModelSerializer):

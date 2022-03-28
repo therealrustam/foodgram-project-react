@@ -20,7 +20,7 @@ router1.register('favorite', FavoriteViewSet, basename='favorite')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('recipes/<int:post_id>/', include(router1.urls)),
+    path('recipes/<int:recipes_id>/', include(router1.urls)),
     path('users/', include(router2.urls)),
     path('auth/', include('djoser.urls.authtoken')),
     path('recipes/download_shopping_cart/', CartViewSet)
