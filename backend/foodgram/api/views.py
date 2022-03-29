@@ -24,23 +24,25 @@ class CreateUserView(UserViewSet):
         return Response(serializer.data)
 
 
-class SubscribeViewSet(viewsets.ReadOnlyModelViewSet):
+class SubscribeViewSet(viewsets.ModelViewSet):
     """
     Класс вьюсет подписок.
     """
     serializer_class = SubscribeSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('following__username',)
-    http_method_names = ['get', 'post']
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
     def list(self, request):
         queryset = Subscribe.objects.all()
         serializer = SubscribeSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    def delete(self, request, *args, **kwargs):
+        author_id = self.kwargs['users_id']
+        user_id = request.user.id
+        subscribe = get_object_or_404(
+            Subscribe, user__id=author_id, following__id=user_id)
+        subscribe.delete()
+        return Response(status=204)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -62,6 +64,15 @@ class IngredientViewSet(viewsets.ModelViewSet):
 class CartViewSet(viewsets.ModelViewSet):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        recipes_id = self.kwargs['recipes_id']
+        user_id = request.user.id
+        cart = get_object_or_404(
+            Cart, user__id=user_id, recipes__id=recipes_id)
+        cart.delete()
+        return Response(status=204)
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):

@@ -1,7 +1,8 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_list_or_404, get_object_or_404
 from djoser.serializers import \
     UserCreateSerializer as BaseUserRegistrationSerializer
 from drf_extra_fields.fields import Base64ImageField
+from importlib_metadata import requires
 from recipes.models import Cart, Favorite, Ingredient, Recipe, Subscribe, Tag
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -44,35 +45,25 @@ class FavoriteSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        #user = get_object_or_404(User, id=request.user.id)
         id_data = validated_data.pop('id')
         recipe = get_object_or_404(Recipe, id=id_data)
         Favorite.objects.create(
             user_id=request.user.id, recipes_id=id_data)
         return recipe
 
-    def update(self, instance, validated_data):
-        request = self.context.get('request')
-        #user = get_object_or_404(User, id=request.user.id)
-        id_data = validated_data.pop('id')
-        recipe = get_object_or_404(Recipe, id=id_data)
-        favorite = Favorite.objects.delete(
-            user_id=request.user.id, recipes_id=id_data)
-        return recipe
 
-
-class CartSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'cooking_time')
+class CartSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    cooking_time = serializers.IntegerField()
 
     def create(self, validated_data):
-        request = self.context.get('request', None)
-        user = get_object_or_404(User, id=request.user.id)
-        recipe = get_object_or_404(Recipe, **validated_data)
-        Cart.objects.create(user=user, recipe=recipe)
-        return user
+        request = self.context.get('request')
+        id_data = validated_data.pop('id')
+        recipe = get_object_or_404(Recipe, id=id_data)
+        Cart.objects.create(
+            user_id=request.user.id, recipes_id=id_data)
+        return recipe
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -109,10 +100,36 @@ class RecipeSerializer(serializers.ModelSerializer):
             return False
 
 
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Recipe.
+    """
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'cooking_time')
+
+
 class SubscribeSerializer(serializers.Serializer):
     """
-    Сериализатор модели подписок.
+    Сериализатор подписок.
     """
-    class Meta:
-        model = Subscribe
-        fields = '__all__'
+    email = serializers.EmailField()
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    is_subscribed = serializers.BooleanField()
+    #recipes = RecipeShortSerializer(required=False)
+    recipes_count = serializers.SerializerMethodField()
+
+    def get_recipes_count(self, obj):
+        author_id = self.context.get('id')
+        return len(get_list_or_404(Recipe, author__id=author_id))
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        id_data = self.context.get('view').kwargs.get('users_id')
+        user = get_object_or_404(User, pk=id_data)
+        Subscribe.objects.create(
+            user_id=id_data, following_id=request.user.id)
+        return user
