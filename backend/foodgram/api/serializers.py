@@ -88,6 +88,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'name', 'image', 'text', 'ingredients',
                   'tags', 'cooking_time', 'is_in_shopping_cart', 'is_favorited')
 
+    def create(self, validated_data):
+        request = self.context.get('request')
+        recipe = Recipe.objects.create(
+            author_id=request.user.id, **validated_data)
+        return recipe
+
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         recipe_id = self.context.get('id')
