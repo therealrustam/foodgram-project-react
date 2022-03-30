@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_list_or_404, get_object_or_404
 from djoser.views import UserViewSet
 from recipes.models import Cart, Favorite, Ingredient, Recipe, Subscribe, Tag
 from rest_framework import filters, permissions, status, views, viewsets
@@ -10,7 +10,7 @@ from users.models import User
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeSerializer,
                           RegistrationSerializer, SubscribeSerializer,
-                          TagSerializer)
+                          TagSerializer, SubscriptionsSerializer)
 
 
 class CreateUserView(UserViewSet):
@@ -32,7 +32,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
-        queryset = Subscribe.objects.all()
+        queryset = Subscribe.objects.filter(following=request.user)
         serializer = SubscribeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -45,6 +45,25 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         return Response(status=204)
 
 
+class SubscribstionsViewSet(viewsets.ModelViewSet):
+    """
+    Класс вьюсет подписок.
+    """
+    serializer_class = SubscriptionsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        following_id = self.kwargs.get('user_id')
+        subscribe = get_object_or_404(Subscribe, following__id=following_id)
+        new_queryset = subscribe.authors.all()
+        return new_queryset
+
+    def list(self, request):
+        queryset = User.objects.filter(following=request.user)
+        serializer = SubscriptionsSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -54,6 +73,9 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class IngredientViewSet(viewsets.ModelViewSet):

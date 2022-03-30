@@ -2,8 +2,8 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (CartViewSet, CreateUserView, FavoriteViewSet,
-                    SubscribeViewSet, IngredientViewSet, RecipeViewSet,
-                    TagViewSet)
+                    IngredientViewSet, RecipeViewSet, SubscribeViewSet,
+                    SubscribstionsViewSet, TagViewSet)
 
 app_name = 'api'
 router = DefaultRouter()
@@ -15,7 +15,8 @@ router.register('users', CreateUserView, basename='users')
 router.register('tags', TagViewSet, basename='tags')
 router.register('recipes', RecipeViewSet, basename='recipes')
 router.register('ingredients', IngredientViewSet, basename='ingredients')
-router2.register('subscriptions', SubscribeViewSet, basename='subscriptions')
+router2.register('subscriptions', SubscribstionsViewSet,
+                 basename='subscriptions')
 router1.register('shopping_cart', CartViewSet, basename='shopping_cart')
 router1.register('favorite', FavoriteViewSet, basename='favorite')
 router3.register('subscribe', SubscribeViewSet, basename='subscribe')
