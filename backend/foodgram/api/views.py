@@ -28,15 +28,14 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     """
     Класс вьюсет подписок.
     """
-    queryset = User.objects.all()
     serializer_class = SubscribeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
-        #subscribe = Subscribe.objects.filter(following=request.user)
-        #queryset = subscribe.authors.all()
-        queryset = User.objects.all()
-        serializer = SubscribeSerializer(queryset, many=True)
+        subscribe = Subscribe.objects.filter(following=request.user)
+        print(request.user.id)
+        queryset = subscribe.authors.all()
+        serializer = RegistrationSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):

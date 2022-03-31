@@ -119,18 +119,18 @@ class RecipeMinifieldSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'cooking_time', 'image')
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
+class SubscribeSerializer(serializers.Serializer):
     """
     Сериализатор подписок.
     """
+    email = serializers.EmailField()
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
     is_subscribed = serializers.SerializerMethodField()
     recipes = RecipeMinifieldSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ('id', 'email', 'username', 'first_name',
-                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
 
     def get_recipes_count(self, obj):
         author_id = obj.id
@@ -138,8 +138,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        user_id = self.context.get('id')
-        if Subscribe.objects.filter(user__id=user_id, following=request.user).exists():
+        if Subscribe.objects.filter(
+                user__id=obj.id, following=request.user).exists():
             return True
         else:
             return False
@@ -147,7 +147,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request')
         user_id = self.context.get('view').kwargs.get('users_id')
-        user = User.objects.filter(id=user_id)
+        user = get_object_or_404(User, id=user_id)
         Subscribe.objects.create(
-            user=user, following_id=request.user.id)
+            user_id=user_id, following_id=request.user.id)
         return user
