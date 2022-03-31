@@ -8,9 +8,9 @@ from rest_framework.response import Response
 from users.models import User
 
 from .serializers import (CartSerializer, FavoriteSerializer,
-                          IngredientSerializer, RecipeSerializer,
+                          IngredientSerializer, RecipeReadSerializer, RecipeWriteSerializer,
                           RegistrationSerializer, SubscribeSerializer,
-                          TagSerializer, SubscriptionsSerializer)
+                          TagSerializer)
 
 
 class CreateUserView(UserViewSet):
@@ -28,11 +28,14 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     """
     Класс вьюсет подписок.
     """
+    queryset = User.objects.all()
     serializer_class = SubscribeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
-        queryset = Subscribe.objects.filter(following=request.user)
+        #subscribe = Subscribe.objects.filter(following=request.user)
+        #queryset = subscribe.authors.all()
+        queryset = User.objects.all()
         serializer = SubscribeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -45,25 +48,6 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         return Response(status=204)
 
 
-class SubscribstionsViewSet(viewsets.ModelViewSet):
-    """
-    Класс вьюсет подписок.
-    """
-    serializer_class = SubscriptionsSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        following_id = self.kwargs.get('user_id')
-        subscribe = get_object_or_404(Subscribe, following__id=following_id)
-        new_queryset = subscribe.authors.all()
-        return new_queryset
-
-    def list(self, request):
-        queryset = User.objects.filter(following=request.user)
-        serializer = SubscriptionsSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -72,10 +56,15 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method in ['POST', 'PATCH']:
+            return RecipeWriteSerializer
+        return RecipeReadSerializer
 
 
 class IngredientViewSet(viewsets.ModelViewSet):

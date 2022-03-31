@@ -16,7 +16,7 @@ class TagRecipeInline(admin.TabularInline):
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email')
+    list_display = ('username', 'email', 'id')
     search_fields = ('username',)
     empty_value_display = '-пусто-'
     list_filter = ('username',)
@@ -53,7 +53,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     inlines = (IngredientRecipeInline, TagRecipeInline,)
     list_display = ('name', 'author', 'text',
-                    'cooking_time',)
+                    'cooking_time', 'id')
     search_fields = ('name',)
     empty_value_display = '-пусто-'
     list_filter = ('name',)

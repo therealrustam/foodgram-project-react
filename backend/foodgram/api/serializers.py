@@ -73,7 +73,7 @@ class CartSerializer(serializers.Serializer):
         return recipe
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Recipe.
     """
     author = RegistrationSerializer(read_only=True)
@@ -88,29 +88,25 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'name', 'image', 'text', 'ingredients',
                   'tags', 'cooking_time', 'is_in_shopping_cart', 'is_favorited')
 
-    def create(self, validated_data):
-        request = self.context.get('request')
-        recipe = Recipe.objects.create(
-            author_id=request.user.id, **validated_data)
-        return recipe
-
     def get_is_favorited(self, obj):
         request = self.context.get('request')
-        recipe_id = self.context.get('id')
-        recipe = Recipe.objects.filter(id=recipe_id)
-        if Favorite.objects.filter(user=request.user, recipes=recipe).exists:
+        recipe = get_object_or_404(Recipe, id=obj.id)
+        if Favorite.objects.filter(user=request.user, recipes=recipe).exists():
             return True
         else:
             return False
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
-        recipe_id = self.context.get('id')
-        recipe = Recipe.objects.filter(id=recipe_id)
-        if Cart.objects.filter(user=request.user, recipes=recipe).exists:
+        recipe = get_object_or_404(Recipe, id=obj.id)
+        if Cart.objects.filter(user=request.user, recipes=recipe).exists():
             return True
         else:
             return False
+
+
+class RecipeWriteSerializer(RecipeReadSerializer):
+    tags = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
 
 class RecipeMinifieldSerializer(serializers.ModelSerializer):
@@ -123,36 +119,35 @@ class RecipeMinifieldSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'cooking_time', 'image')
 
 
-class SubscribeSerializer(serializers.Serializer):
+class SubscribeSerializer(serializers.ModelSerializer):
     """
     Сериализатор подписок.
     """
-    email = serializers.EmailField()
-    id = serializers.IntegerField()
-    username = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    is_subscribed = serializers.BooleanField()
-    recipes = RecipeMinifieldSerializer(many=True)
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = RecipeMinifieldSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
 
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+
     def get_recipes_count(self, obj):
-        author_id = self.context.get('id')
-        return len(get_list_or_404(Recipe, author_id=author_id))
+        author_id = obj.id
+        return (Recipe.objects.filter(author__id=author_id).count())
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        user_id = self.context.get('id')
+        if Subscribe.objects.filter(user__id=user_id, following=request.user).exists():
+            return True
+        else:
+            return False
 
     def create(self, validated_data):
         request = self.context.get('request')
         user_id = self.context.get('view').kwargs.get('users_id')
-        user = get_object_or_404(User, pk=user_id)
+        user = User.objects.filter(id=user_id)
         Subscribe.objects.create(
             user=user, following_id=request.user.id)
         return user
-
-
-class SubscriptionsSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Subscriptions.
-    """
-
-    class Meta:
-        model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name')
