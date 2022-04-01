@@ -65,7 +65,6 @@ class CartSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        #recipe_id = validated_data.pop('id')
         recipe_id = self.kwargs.get('recipes_id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
         Cart.objects.create(
@@ -108,6 +107,36 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 class RecipeWriteSerializer(RecipeReadSerializer):
     tags = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
+    def create(self, validated_data):
+        tags_data = validated_data.pop('tags')
+        author = validated_data.get('author')
+        name = validated_data.get('name')
+        image = validated_data.get('image')
+        text = validated_data.get('text')
+        cooking_time = validated_data.get('cooking_time')
+        ingredients = validated_data.pop('ingredients')
+        recipe = Recipe.objects.create(
+            author=author,
+            name=name,
+            image=image,
+            text=text,
+            cooking_time=cooking_time,
+        )
+        recipe.save()
+        for tag in tags_data:
+            recipe.tags.add(tag)
+            recipe.save()
+        for count_ingredient in ingredients:
+            current_ingredient = Ingredient.objects.get(
+                id=count_ingredient.id
+            )
+            Ingredient.objects.create(
+                ingredient=current_ingredient,
+                recipe=recipe,
+                amount=count_ingredient.amount,
+            )
+        return recipe
+
 
 class RecipeMinifieldSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Recipe.
@@ -133,13 +162,13 @@ class SubscribeSerializer(serializers.Serializer):
     recipes_count = serializers.SerializerMethodField()
 
     def get_recipes_count(self, obj):
-        author_id = obj.id
-        return (Recipe.objects.filter(author__id=author_id).count())
+        following_id = obj.id
+        return (Recipe.objects.filter(following__id=following_id).count())
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if Subscribe.objects.filter(
-                user__id=obj.id, following=request.user).exists():
+                user__id=obj.id, follower=request.user).exists():
             return True
         else:
             return False
@@ -151,3 +180,9 @@ class SubscribeSerializer(serializers.Serializer):
         Subscribe.objects.create(
             user_id=user_id, following_id=request.user.id)
         return user
+
+
+class SubscriptionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'

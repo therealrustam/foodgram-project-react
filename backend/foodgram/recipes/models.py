@@ -78,7 +78,7 @@ class Subscribe(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='author',
+        related_name='follower',
     )
     following = models.ForeignKey(
         User,

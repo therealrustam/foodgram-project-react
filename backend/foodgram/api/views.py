@@ -1,22 +1,25 @@
 from django.shortcuts import get_list_or_404, get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import Cart, Favorite, Ingredient, Recipe, Subscribe, Tag
-from rest_framework import filters, permissions, status, views, viewsets
+from rest_framework import (filters, mixins, pagination, permissions, status,
+                            views, viewsets)
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from users.models import User
 
 from .serializers import (CartSerializer, FavoriteSerializer,
-                          IngredientSerializer, RecipeReadSerializer, RecipeWriteSerializer,
-                          RegistrationSerializer, SubscribeSerializer,
-                          TagSerializer)
+                          IngredientSerializer, RecipeReadSerializer,
+                          RecipeWriteSerializer, RegistrationSerializer,
+                          SubscribeSerializer, TagSerializer)
 
 
 class CreateUserView(UserViewSet):
     queryset = User.objects.all()
     serializer_class = RegistrationSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = pagination.PageNumberPagination
 
     def list(self, request):
         queryset = User.objects.all()
@@ -32,9 +35,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
-        subscribe = Subscribe.objects.filter(following=request.user)
-        print(request.user.id)
-        queryset = subscribe.authors.all()
+        queryset = get_list_or_404(User, following__user=self.request.user)
         serializer = RegistrationSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -56,6 +57,10 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [permissions.AllowAny]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = (
+        'is_favorited', 'is_in_shopping_cart', 'author', 'tags')
+    pagination_class = pagination.LimitOffsetPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -68,7 +73,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
+    permission_classes = [permissions.AllowAny]
     serializer_class = IngredientSerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    pagination_class = None
+    search_fields = ('^name',)
 
 
 class CartViewSet(viewsets.ModelViewSet):
@@ -99,5 +108,12 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         return Response(status=204)
 
 
-class DownloadViewSet():
-    pass
+class DownloadViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+
+    def list(self, request):
+        print(1)
+        queryset = Ingredient.objects.all()
+        serializer = IngredientSerializer(queryset, many=True)
+        return Response(serializer.data)
