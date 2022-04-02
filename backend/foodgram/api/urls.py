@@ -1,5 +1,5 @@
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from .views import (CartViewSet, CreateUserView, FavoriteViewSet,
                     IngredientViewSet, RecipeViewSet, SubscribeViewSet,
@@ -7,6 +7,7 @@ from .views import (CartViewSet, CreateUserView, FavoriteViewSet,
 
 app_name = 'api'
 router = DefaultRouter()
+router1 = SimpleRouter(trailing_slash=False)
 
 
 router.register('users', CreateUserView, basename='users')
@@ -23,13 +24,14 @@ router.register(r'recipes/(?P<recipes_id>\d+)/favorite',
                 FavoriteViewSet, basename='favorite')
 router.register(r'users/(?P<users_id>\d+)/subscribe',
                 SubscribeViewSet, basename='subscribe')
-router.register(r'recipes/download_shopping_cart',
-                DownloadViewSet, basename='download')
-router.register(r'users/subscriptions',
-                SubscribeViewSet, basename='subscriptions')
+router1.register(r'recipes/download_shopping_cart',
+                 DownloadViewSet, basename='download')
+router1.register(r'users/subscriptions',
+                 SubscribeViewSet, basename='subscriptions')
 
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('', include(router1.urls)),
     path('auth/', include('djoser.urls.authtoken')),
 ]

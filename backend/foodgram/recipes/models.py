@@ -10,8 +10,6 @@ class Ingredient(models.Model):
     """
     name = models.CharField(max_length=200)
     measurement_unit = models.CharField(max_length=200)
-    amount = models.IntegerField(default=1,
-                                 validators=[MinValueValidator(1)])
 
     def __str__(self):
         return self.name
@@ -51,7 +49,7 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag, through='TagRecipe')
     ingredients = models.ManyToManyField(
-        Ingredient, through='IngredientRecipe')
+        Ingredient, through='IngredientRecipe', related_name='recipes')
     is_favorited = models.BooleanField(default=False)
     is_in_shopping_cart = models.BooleanField(default=False)
 
@@ -88,8 +86,12 @@ class Subscribe(models.Model):
 
 
 class IngredientRecipe(models.Model):
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.CASCADE, related_name='ingredientrecipes')
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name='ingredientrecipes')
+    amount = models.IntegerField(default=1,
+                                 validators=[MinValueValidator(1)])
 
     def __str__(self):
         return f'{self.ingredient} {self.recipe}'

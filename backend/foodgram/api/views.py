@@ -1,7 +1,8 @@
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import Cart, Favorite, Ingredient, Recipe, Subscribe, Tag
+from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
+                            Recipe, Subscribe, Tag)
 from rest_framework import (filters, mixins, pagination, permissions, status,
                             views, viewsets)
 from rest_framework.decorators import action
@@ -10,16 +11,16 @@ from rest_framework.response import Response
 from users.models import User
 
 from .serializers import (CartSerializer, FavoriteSerializer,
-                          IngredientSerializer, RecipeReadSerializer,
-                          RecipeWriteSerializer, RegistrationSerializer,
-                          SubscribeSerializer, TagSerializer)
+                          IngredientAmountSerializer, IngredientSerializer,
+                          RecipeSerializer, RegistrationSerializer,
+                          SubscribeSerializer, SubscriptionSerializer,
+                          TagSerializer)
 
 
 class CreateUserView(UserViewSet):
     queryset = User.objects.all()
     serializer_class = RegistrationSerializer
-    permission_classes = [permissions.AllowAny]
-    pagination_class = pagination.PageNumberPagination
+    pagination_class = pagination.LimitOffsetPagination
 
     def list(self, request):
         queryset = User.objects.all()
@@ -33,17 +34,19 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     """
     serializer_class = SubscribeSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = pagination.PageNumberPagination
 
     def list(self, request):
         queryset = get_list_or_404(User, following__user=self.request.user)
-        serializer = RegistrationSerializer(queryset, many=True)
+        serializer = SubscriptionSerializer(
+            queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):
         author_id = self.kwargs['users_id']
         user_id = request.user.id
         subscribe = get_object_or_404(
-            Subscribe, user__id=author_id, following__id=user_id)
+            Subscribe, user__id=user_id, following__id=author_id)
         subscribe.delete()
         return Response(status=204)
 
@@ -61,14 +64,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_fields = (
         'is_favorited', 'is_in_shopping_cart', 'author', 'tags')
     pagination_class = pagination.LimitOffsetPagination
+    serializer_class = RecipeSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
-    def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH']:
-            return RecipeWriteSerializer
-        return RecipeReadSerializer
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
@@ -111,9 +110,19 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 class DownloadViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
-        print(1)
-        queryset = Ingredient.objects.all()
-        serializer = IngredientSerializer(queryset, many=True)
+        carts = get_list_or_404(
+            Cart, user__id=request.user.id)
+        recipes = list()
+        for cart in carts:
+            recipes.append(Recipe.objects.get(carts=cart))
+        ingredients = list()
+        for recipe in recipes:
+            ingredients.extend(
+                (IngredientRecipe.objects.filter(recipe=recipe).values_list('id', flat=True)))
+        queryset = IngredientRecipe.objects.filter(id__in=ingredients)
+        serializer = IngredientAmountSerializer(
+            queryset, many=True, context={'request': request})
         return Response(serializer.data)
