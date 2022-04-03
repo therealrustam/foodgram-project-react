@@ -33,8 +33,10 @@ class RegistrationSerializer(UserCreateSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
+        if request.user.username == '':
+            return False
         if Subscribe.objects.filter(
-                user__id=request.user.id, following=obj.id).exists():
+                user=request.user, following__id=obj.id).exists():
             return True
         else:
             return False
@@ -104,7 +106,7 @@ class FavoriteSerializer(serializers.Serializer):
         id_data = validated_data.pop('id')
         recipe = get_object_or_404(Recipe, id=id_data)
         Favorite.objects.create(
-            user_id=request.user.id, recipes_id=id_data)
+            user=request.user, recipes_id=id_data)
         return recipe
 
 
@@ -122,7 +124,7 @@ class CartSerializer(serializers.Serializer):
         recipe_id = self.kwargs.get('recipes_id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
         Cart.objects.create(
-            user_id=request.user.id, recipes_id=recipe_id)
+            user=request.user, recipes_id=recipe_id)
         return recipe
 
 
@@ -149,6 +151,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         recipe = get_object_or_404(Recipe, id=obj.id)
+        if request.user.username == '':
+            return False
         if Favorite.objects.filter(user=request.user, recipes=recipe).exists():
             return True
         else:
@@ -157,6 +161,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         recipe = get_object_or_404(Recipe, id=obj.id)
+        if request.user.username == '':
+            return False
         if Cart.objects.filter(user=request.user, recipes=recipe).exists():
             return True
         else:
@@ -249,8 +255,10 @@ class SubscribeSerializer(serializers.Serializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
+        if request.user.username == '':
+            return False
         if Subscribe.objects.filter(
-                user__id=request.user.id, following=obj.id).exists():
+                user=request.user, following__id=obj.id).exists():
             return True
         else:
             return False
@@ -260,7 +268,7 @@ class SubscribeSerializer(serializers.Serializer):
         user_id = self.context.get('view').kwargs.get('users_id')
         user = get_object_or_404(User, id=user_id)
         Subscribe.objects.create(
-            user_id=user_id, following_id=request.user.id)
+            user__id=user_id, following__id=request.user.id)
         return user
 
 
@@ -281,7 +289,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return Recipe.objects.filter(author__id=obj.id).count()
 
     def get_is_subscribed(self, obj):
-        print(self.context)
+        if self.context['request'].user.username == '':
+            return False
         if Subscribe.objects.filter(
                 user=self.context['request'].user,
                 following__id=obj.id).exists():
@@ -296,8 +305,7 @@ class ShoppingSerializer(serializers.ModelSerializer):
     """
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit',
-    )
+        source='ingredient.measurement_unit')
 
     class Meta:
         model = ShoppingCart
