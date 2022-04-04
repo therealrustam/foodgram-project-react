@@ -57,7 +57,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     inlines = (IngredientRecipeInline, TagRecipeInline,)
     list_display = ('name', 'author', 'text',
-                    'cooking_time', 'id')
+                    'cooking_time', 'id', 'pub_date')
     search_fields = ('name',)
     empty_value_display = '-пусто-'
     list_filter = ('name',)

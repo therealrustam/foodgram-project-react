@@ -182,7 +182,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         image = validated_data.get('image')
         text = validated_data.get('text')
         cooking_time = validated_data.get('cooking_time')
-        print(validated_data)
         ingredients = validated_data.pop('ingredientrecipes')
         recipe = Recipe.objects.create(
             author=author,
@@ -277,13 +276,23 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     Сериализатор для списка подписок.
     """
     is_subscribed = serializers.SerializerMethodField()
-    recipes = RecipeMinifieldSerializer(many=True, read_only=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        if request.GET.get('recipes_limit'):
+            recipes_limit = int(request.GET.get('recipes_limit'))
+            queryset = Recipe.objects.filter(author__id=obj.id).order_by('id')[
+                :recipes_limit]
+        else:
+            queryset = Recipe.objects.filter(author__id=obj.id).order_by('id')
+        return RecipeMinifieldSerializer(queryset, many=True).data
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author__id=obj.id).count()

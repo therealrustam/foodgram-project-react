@@ -11,7 +11,7 @@ from .views import (CartViewSet, CreateUserView, FavoriteViewSet,
 
 app_name = 'api'
 router = DefaultRouter()
-router1 = SimpleRouter(trailing_slash=False)
+router1 = DefaultRouter()
 
 
 router.register('users', CreateUserView, basename='users')
@@ -35,7 +35,7 @@ router1.register(r'users/subscriptions',
 
 
 urlpatterns = [
-    path('', include(router.urls)),
     path('', include(router1.urls)),
+    path('', include(router.urls)),
     path('auth/', include('djoser.urls.authtoken')),
 ]

@@ -64,11 +64,13 @@ class Recipe(models.Model):
         Ingredient, through='IngredientRecipe', related_name='recipes')
     is_favorited = models.BooleanField(default=False)
     is_in_shopping_cart = models.BooleanField(default=False)
+    pub_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
+        ordering = ('-pub_date', )
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 

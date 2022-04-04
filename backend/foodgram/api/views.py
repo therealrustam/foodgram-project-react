@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from rest_framework import filters, pagination, permissions, viewsets
+from rest_framework import filters, permissions, viewsets
 from rest_framework.response import Response
 
 from users.models import User
@@ -57,10 +57,9 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         queryset = get_list_or_404(User, following__user=self.request.user)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
+            serializer = SubscriptionSerializer(
+                page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
-        serializer = SubscriptionSerializer(
-            queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):
@@ -93,7 +92,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = (
         'is_favorited', 'is_in_shopping_cart', 'author', 'tags')
-    pagination_class = pagination.LimitOffsetPagination
     serializer_class = RecipeSerializer
 
     def perform_create(self, serializer):
