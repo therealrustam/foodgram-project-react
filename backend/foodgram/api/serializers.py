@@ -6,9 +6,8 @@ from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
-                            Recipe, Subscribe, Tag, TagRecipe, ShoppingCart)
+                            Recipe, Subscribe, Tag, TagRecipe)
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from users.models import User
 
 
@@ -208,17 +207,16 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time', instance.cooking_time)
         instance.save()
         tags_data = validated_data.pop('tags')
-        recipe = Recipe.objects.get(name=instance.name)
-        TagRecipe.objects.filter(recipe=recipe).delete()
-        for tag in tags_data:
-            recipe.tags.add(tag)
-            recipe.save()
+        TagRecipe.objects.filter(recipe=instance).delete()
+        for tag_data in tags_data:
+            instance.tags.add(tag_data)
+            instance.save()
         ingredients = validated_data.pop('ingredientrecipes')
-        IngredientRecipe.objects.filter(recipe=recipe).delete()
+        IngredientRecipe.objects.filter(recipe=instance).delete()
         for ingredient in ingredients:
             ingredientrecipe = IngredientRecipe.objects.create(
                 ingredient_id=ingredient['id'],
-                recipe=recipe)
+                recipe=instance)
             ingredientrecipe.amount = ingredient['amount']
             ingredientrecipe.save()
         instance.save()
@@ -306,16 +304,3 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             return True
         else:
             return False
-
-
-class ShoppingSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для списка покупок.
-    """
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit')
-
-    class Meta:
-        model = ShoppingCart
-        fields = ('name', 'amount', 'measurement_unit')

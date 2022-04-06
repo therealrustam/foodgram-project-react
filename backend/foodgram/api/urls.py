@@ -3,11 +3,11 @@
 """
 
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter, SimpleRouter
+from rest_framework.routers import DefaultRouter
 
 from .views import (CartViewSet, CreateUserView, FavoriteViewSet,
                     IngredientViewSet, RecipeViewSet, SubscribeViewSet,
-                    TagViewSet, DownloadViewSet)
+                    TagViewSet, DownloadCart)
 
 app_name = 'api'
 router = DefaultRouter()
@@ -29,7 +29,7 @@ router.register(r'recipes/(?P<recipes_id>\d+)/favorite',
 router.register(r'users/(?P<users_id>\d+)/subscribe',
                 SubscribeViewSet, basename='subscribe')
 router1.register(r'recipes/download_shopping_cart',
-                 DownloadViewSet, basename='download')
+                 DownloadCart, basename='download')
 router1.register(r'users/subscriptions',
                  SubscribeViewSet, basename='subscriptions')
 

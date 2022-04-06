@@ -2,22 +2,25 @@
 Создание view классов обработки запросов.
 """
 
-import json
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
+                            Recipe, Subscribe, Tag)
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework import filters, permissions, viewsets
 from rest_framework.response import Response
-
 from users.models import User
-from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
-                            Recipe, ShoppingCart, Subscribe, Tag)
+
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeSerializer,
-                          RegistrationSerializer, ShoppingSerializer,
-                          SubscribeSerializer, SubscriptionSerializer,
-                          TagSerializer)
+                          RegistrationSerializer, SubscribeSerializer,
+                          SubscriptionSerializer, TagSerializer)
 
 
 class CreateUserView(UserViewSet):
@@ -153,44 +156,48 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         return Response(status=204)
 
 
-class DownloadViewSet(viewsets.ModelViewSet):
+class DownloadCart(viewsets.ModelViewSet):
     """
-    Вьюсет сохранения файла списка покупок.
+    Сохранение файла списка покупок.
     """
     permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def canvas_method(dictionary):
+        response = HttpResponse(content_type='application/pdf')
+        response[
+            'Content-Disposition'] = 'attachment; filename = "shopping_cart.pdf"'
+        begin_position_x, begin_position_y = 40, 650
+        sheet = canvas.Canvas(response, pagesize=A4)
+        pdfmetrics.registerFont(TTFont('FreeSans', 'FreeSans.ttf'))
+        sheet.setFont('FreeSans', 50)
+        sheet.setTitle('Список покупок')
+        sheet.drawString(begin_position_x,
+                         begin_position_y+40, 'Список покупок: ')
+        sheet.setFont('FreeSans', 24)
+        for number, item in enumerate(dictionary, start=1):
+            if begin_position_y < 100:
+                begin_position_y = 700
+                sheet.showPage()
+                sheet.setFont('FreeSans', 24)
+            sheet.drawString(
+                begin_position_x,
+                begin_position_y,
+                f'{number}.  {item["ingredient__name"]} - '
+                f'{item["ingredient_total"]}'
+                f' {item["ingredient__measurement_unit"]}'
+            )
+            begin_position_y -= 30
+        sheet.showPage()
+        sheet.save()
+        return response
 
     def list(self, request):
         """
         Метод создания списка покупок.
         """
-        carts = get_list_or_404(
-            Cart, user__id=request.user.id)
-        recipes = list()
-        for cart in carts:
-            recipes.append(Recipe.objects.get(carts=cart))
-        ingredients = list()
-        for recipe in recipes:
-            ingredients.extend(
-                (IngredientRecipe.objects.filter(
-                    recipe=recipe).values_list('id', flat=True)))
-        ingredientrecipes = IngredientRecipe.objects.filter(id__in=ingredients)
-        length = len(ingredientrecipes)
-        for counter1 in range(length-1):
-            amount = ingredientrecipes[counter1].amount
-            for counter2 in range(counter1+1, length-1):
-                if (ingredientrecipes[counter1].ingredient ==
-                        ingredientrecipes[counter2].ingredient):
-                    amount += ingredientrecipes[counter2].amount
-            ShoppingCart.objects.get_or_create(
-                ingredient=ingredientrecipes[counter1].ingredient,
-                amount=amount,
-                user=request.user
-            )
-        queryset = ShoppingCart.objects.filter(user=request.user)
-        serializer = ShoppingSerializer(
-            queryset, many=True, context={'request': request})
-        response = HttpResponse(json.dumps(serializer.data),
-                                content_type='static/json')
-        response['Content-Disposition'
-                 ] = "attachment, filename = 'ShoppingCart.json'"
-        return response
+        result = IngredientRecipe.objects.filter(
+            recipe__carts__user=request.user).values(
+            'ingredient__name', 'ingredient__measurement_unit').order_by(
+                'ingredient__name').annotate(ingredient_total=Sum('amount'))
+        return self.canvas_method(result)

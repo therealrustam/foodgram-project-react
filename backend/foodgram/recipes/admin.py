@@ -6,7 +6,7 @@ from django.contrib import admin
 
 from users.models import User
 from .models import (Cart, Favorite, Subscribe, Ingredient, IngredientRecipe,
-                     Recipe, Tag, TagRecipe, ShoppingCart)
+                     Recipe, Tag, TagRecipe)
 
 
 class IngredientRecipeInline(admin.TabularInline):
@@ -70,14 +70,6 @@ class SubscribeAdmin(admin.ModelAdmin):
     list_filter = ('user',)
 
 
-class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = ('ingredient', 'amount', 'user')
-    search_fields = ('ingredient',)
-    empty_value_display = '-пусто-'
-    list_filter = ('ingredient',)
-
-
-admin.site.register(ShoppingCart, ShoppingCartAdmin)
 admin.site.register(Cart, CartAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(User, UserAdmin)

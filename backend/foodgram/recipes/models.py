@@ -75,30 +75,6 @@ class Recipe(models.Model):
         verbose_name_plural = 'Рецепты'
 
 
-class ShoppingCart(models.Model):
-    """
-    Создание модели списка покупок.
-    """
-    ingredient = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-    )
-    amount = models.IntegerField(default=1,
-                                 validators=[MinValueValidator(1)])
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='shopping',
-    )
-
-    def __str__(self):
-        return f'{self.ingredient} {self.amount}'
-
-    class Meta:
-        verbose_name = 'Список покупок'
-        verbose_name_plural = 'Списки покупок'
-
-
 class Cart(models.Model):
     """
     Создание модели корзины.
