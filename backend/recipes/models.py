@@ -12,8 +12,10 @@ class Ingredient(models.Model):
     """
     Создание модели продуктов.
     """
-    name = models.CharField(max_length=200)
-    measurement_unit = models.CharField(max_length=200)
+    name = models.CharField(max_length=200,
+                            verbose_name='Название')
+    measurement_unit = models.CharField(max_length=200,
+                                        verbose_name='Единицы измерения')
 
     def __str__(self):
         return self.name
@@ -27,8 +29,8 @@ class Tag(models.Model):
     """
     Создание модели тэгов.
     """
-    name = models.CharField(max_length=200)
-    color = ColorField(format='hex')
+    name = models.CharField(max_length=200, verbose_name='Название')
+    color = ColorField(format='hex', verbose_name='Цвет')
     slug = models.SlugField(max_length=200, unique=True)
 
     def __str__(self):
@@ -47,10 +49,11 @@ class Recipe(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='recipes',
+        verbose_name='Автор'
     )
     name = models.CharField(max_length=200)
     image = models.ImageField(
-        'Изображение',
+        verbose_name='Изображение',
         upload_to='static/images/recipes/',
         blank=True
     )
