@@ -1,7 +1,6 @@
 """
 Создание view классов обработки запросов.
 """
-
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
@@ -17,6 +16,7 @@ from rest_framework import filters, permissions, viewsets
 from rest_framework.response import Response
 from users.models import User
 
+from .filters import RecipeFilters
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeSerializer,
                           RegistrationSerializer, SubscribeSerializer,
@@ -52,7 +52,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     serializer_class = SubscribeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         """
         Метод создания списка авторов,
         на которых подписан текущий пользователь.
@@ -64,6 +64,13 @@ class SubscribeViewSet(viewsets.ModelViewSet):
                 page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        user_id = self.kwargs.get('users_id')
+        user = get_object_or_404(User, id=user_id)
+        Subscribe.objects.create(
+            user=request.user, following=user)
+        return Response(status=201)
 
     def delete(self, request, *args, **kwargs):
         """
@@ -92,9 +99,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """
     queryset = Recipe.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = (
-        'is_favorited', 'is_in_shopping_cart', 'author', 'tags')
+    filter_class = RecipeFilters
     serializer_class = RecipeSerializer
 
     def perform_create(self, serializer):
@@ -124,6 +129,13 @@ class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        recipes_id = int(self.kwargs['recipes_id'])
+        recipe = get_object_or_404(Recipe, id=recipes_id)
+        Cart.objects.create(
+            user=request.user, recipes=recipe)
+        return Response(status=201)
+
     def delete(self, request, *args, **kwargs):
         """
         Метод удаления модели корзины.
@@ -144,6 +156,13 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        recipes_id = int(self.kwargs['recipes_id'])
+        recipe = get_object_or_404(Recipe, id=recipes_id)
+        Favorite.objects.create(
+            user=request.user, recipes=recipe)
+        return Response(status=201)
+
     def delete(self, request, *args, **kwargs):
         """
         Метод удаления модели избранных рецептов.
@@ -162,7 +181,7 @@ class DownloadCart(viewsets.ModelViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @staticmethod
+    @ staticmethod
     def canvas_method(dictionary):
         """
         Метод сохранения списка покупок в формате PDF.

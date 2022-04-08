@@ -34,7 +34,7 @@ class Tag(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
     class Meta:
         verbose_name = 'Тэг'
@@ -121,10 +121,6 @@ class Subscribe(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'following'], name='unique_follow')
-        ]
 
 
 class IngredientRecipe(models.Model):

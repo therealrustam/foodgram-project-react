@@ -11,31 +11,25 @@ from .views import (CartViewSet, CreateUserView, FavoriteViewSet,
 
 app_name = 'api'
 router = DefaultRouter()
-router1 = DefaultRouter()
 
 
 router.register('users', CreateUserView, basename='users')
 router.register(r'tags', TagViewSet, basename='tags')
 router.register(r'recipes', RecipeViewSet, basename='recipes')
 router.register(r'ingredients', IngredientViewSet, basename='ingredients')
-router.register(r'recipes/(?P<recipes_id>\d+)/shopping_cart',
-                CartViewSet, basename='shopping_cart')
-router.register(r'recipes/(?P<recipes_id>\d+)/favorite',
-                FavoriteViewSet, basename='favorite')
-router.register(r'users/(?P<users_id>\d+)/subscribe',
-                SubscribeViewSet, basename='subscribe')
-router.register(r'recipes/(?P<recipes_id>\d+)/favorite',
-                FavoriteViewSet, basename='favorite')
-router.register(r'users/(?P<users_id>\d+)/subscribe',
-                SubscribeViewSet, basename='subscribe')
-router1.register(r'recipes/download_shopping_cart',
-                 DownloadCart, basename='download')
-router1.register(r'users/subscriptions',
-                 SubscribeViewSet, basename='subscriptions')
 
 
 urlpatterns = [
-    path('', include(router1.urls)),
+    path('users/subscriptions/',
+         SubscribeViewSet.as_view({'get': 'list'}), name='subscriptions'),
+    path('recipes/download_shopping_cart/',
+         DownloadCart.as_view({'get': 'list'}), name='download'),
+    path('users/<users_id>/subscribe/', SubscribeViewSet.as_view({'post': 'create',
+                                                                  'delete': 'delete'}), name='subscribe'),
+    path('recipes/<recipes_id>/favorite/', FavoriteViewSet.as_view({'post': 'create',
+                                                                    'delete': 'delete'}), name='favorite'),
+    path('recipes/<recipes_id>/shopping_cart/', CartViewSet.as_view({'post': 'create',
+                                                                    'delete': 'delete'}), name='cart'),
     path('', include(router.urls)),
     path('auth/', include('djoser.urls.authtoken')),
 ]
