@@ -1,6 +1,7 @@
 """
 Создание view классов обработки запросов.
 """
+
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
@@ -19,8 +20,9 @@ from users.models import User
 from .filters import RecipeFilters
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeSerializer,
-                          RegistrationSerializer, SubscribeSerializer,
-                          SubscriptionSerializer, TagSerializer)
+                          RecipeSerializerPost, RegistrationSerializer,
+                          SubscribeSerializer, SubscriptionSerializer,
+                          TagSerializer)
 
 
 class CreateUserView(UserViewSet):
@@ -66,6 +68,9 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
+        """
+        Метод создания подписки.
+        """
         user_id = self.kwargs.get('users_id')
         user = get_object_or_404(User, id=user_id)
         Subscribe.objects.create(
@@ -100,7 +105,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_class = RecipeFilters
-    serializer_class = RecipeSerializer
     filter_backends = [DjangoFilterBackend, ]
 
     def perform_create(self, serializer):
@@ -108,6 +112,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Метод подстановки параметров автора при создании рецепта.
         """
         serializer.save(author=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return RecipeSerializer
+        else:
+            return RecipeSerializerPost
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
@@ -131,6 +141,9 @@ class CartViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        """
+        Метод удаления модели корзины.
+        """
         recipes_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipes_id)
         Cart.objects.create(
@@ -139,7 +152,7 @@ class CartViewSet(viewsets.ModelViewSet):
 
     def delete(self, request, *args, **kwargs):
         """
-        Метод удаления модели корзины.
+        Метод удаления объектов модели корзины.
         """
         recipes_id = self.kwargs['recipes_id']
         user_id = request.user.id
@@ -158,6 +171,9 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        """
+        Метод создания избранных рецептов.
+        """
         recipes_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipes_id)
         Favorite.objects.create(
@@ -189,7 +205,8 @@ class DownloadCart(viewsets.ModelViewSet):
         """
         response = HttpResponse(content_type='application/pdf')
         response[
-            'Content-Disposition'] = 'attachment; filename = "shopping_cart.pdf"'
+            'Content-Disposition'] = 'attachment; \
+        filename = "shopping_cart.pdf"'
         begin_position_x, begin_position_y = 40, 650
         sheet = canvas.Canvas(response, pagesize=A4)
         pdfmetrics.registerFont(TTFont('FreeSans',
