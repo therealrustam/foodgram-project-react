@@ -2,7 +2,6 @@
 Создание необходимых моделей.
 """
 
-from wsgiref.validate import validator
 from colorfield.fields import ColorField
 from django.db import models
 from django.core.validators import MinValueValidator
@@ -86,8 +85,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         verbose_name='Изображение',
-        upload_to='recipes/',
-        blank=True,
+        upload_to='recipes/image/',
         help_text='Выберите изображение рецепта'
     )
     text = models.TextField(
