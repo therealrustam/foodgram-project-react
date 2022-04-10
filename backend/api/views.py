@@ -96,6 +96,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
+        """
+        Метод выбора сериализатора в зависимости от запроса.
+        """
         if self.request.method == 'GET':
             return RecipeSerializer
         else:
@@ -116,13 +119,13 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class CommonViewSet(viewsets.ModelViewSet):
     """
-    Вьюсет обработки модели корзины.
+    Общий вьюсет обработки модели корзины и избранных рецептов.
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         """
-        Метод удаления модели корзины.
+        Метод создания модели корзины или избранных рецептов.
         """
         recipe_id = int(self.kwargs['recipes_id'])
         print()
@@ -137,7 +140,7 @@ class CommonViewSet(viewsets.ModelViewSet):
 
     def delete(self, request, *args, **kwargs):
         """
-        Метод удаления объектов модели корзины.
+        Метод удаления объектов модели корзины или избранных рецептов..
         """
         recipe_id = self.kwargs['recipes_id']
         if 'shopping_cart' in str(request):

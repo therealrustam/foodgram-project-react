@@ -83,7 +83,6 @@ class RegistrationSerializer(UserCreateSerializer, CommonSubscribed):
     """
     Создание сериализатора модели пользователя.
     """
-
     class Meta:
         """
         Мета параметры сериализатора модели пользователя.
