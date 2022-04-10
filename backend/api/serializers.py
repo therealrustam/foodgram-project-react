@@ -2,7 +2,6 @@
 Создание необходимых сериализаторов.
 """
 
-from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -12,11 +11,78 @@ from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
 from users.models import User
 
 
-class RegistrationSerializer(UserCreateSerializer):
+class CommonSubscribed(metaclass=serializers.SerializerMetaclass):
+    """
+    Класс для опредения подписки пользователя на автора.
+    """
+    is_subscribed = serializers.SerializerMethodField()
+
+    def get_is_subscribed(self, obj):
+        """
+        Метод обработки параметра is_subscribed подписок.
+        """
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+        if Subscribe.objects.filter(
+                user=request.user, following__id=obj.id).exists():
+            return True
+        else:
+            return False
+
+
+class CommonRecipe(metaclass=serializers.SerializerMetaclass):
+    """
+    Класс для определения избранных
+    рецептов и рецептов в корзине.
+    """
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+
+    def get_is_favorited(self, obj):
+        """
+        Метод обработки параметра is_favorited избранного.
+        """
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+        if Favorite.objects.filter(user=request.user,
+                                   recipe__id=obj.id).exists():
+            return True
+        else:
+            return False
+
+    def get_is_in_shopping_cart(self, obj):
+        """
+        Метод обработки параметра is_in_shopping_cart в корзине.
+        """
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+        if Cart.objects.filter(user=request.user,
+                               recipe__id=obj.id).exists():
+            return True
+        else:
+            return False
+
+
+class CommonCount(metaclass=serializers.SerializerMetaclass):
+    """
+    Класс для опредения количества рецептов автора.
+    """
+    recipes_count = serializers.SerializerMethodField()
+
+    def get_recipes_count(self, obj):
+        """
+        Метод подсчета количества рецептов автора.
+        """
+        return Recipe.objects.filter(author__id=obj.id).count()
+
+
+class RegistrationSerializer(UserCreateSerializer, CommonSubscribed):
     """
     Создание сериализатора модели пользователя.
     """
-    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         """
@@ -36,19 +102,6 @@ class RegistrationSerializer(UserCreateSerializer):
         result = super(RegistrationSerializer, self).to_representation(obj)
         result.pop('password', None)
         return result
-
-    def get_is_subscribed(self, obj):
-        """
-        Метод обработки параметра is_subscribed подписок.
-        """
-        request = self.context.get('request')
-        if request.user.username == '':
-            return False
-        if Subscribe.objects.filter(
-                user=request.user, following__id=obj.id).exists():
-            return True
-        else:
-            return False
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -133,7 +186,8 @@ class CartSerializer(serializers.Serializer):
     image = Base64ImageField(max_length=None, use_url=False,)
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer,
+                       CommonRecipe):
     """
     Сериализатор модели рецептов.
     """
@@ -143,7 +197,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         source='ingredientrecipes',
         many=True)
     is_in_shopping_cart = serializers.SerializerMethodField()
-    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         """
@@ -154,34 +207,9 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'ingredients', 'tags', 'cooking_time',
                   'is_in_shopping_cart', 'is_favorited')
 
-    def get_is_favorited(self, obj):
-        """
-        Метод обработки параметра is_favorited избранного.
-        """
-        request = self.context.get('request')
-        recipe = get_object_or_404(Recipe, id=obj.id)
-        if request.user.username == '':
-            return False
-        if Favorite.objects.filter(user=request.user, recipe=recipe).exists():
-            return True
-        else:
-            return False
 
-    def get_is_in_shopping_cart(self, obj):
-        """
-        Метод обработки параметра is_in_shopping_cart в корзине.
-        """
-        request = self.context.get('request')
-        recipe = get_object_or_404(Recipe, id=obj.id)
-        if request.user.username == '':
-            return False
-        if Cart.objects.filter(user=request.user, recipe=recipe).exists():
-            return True
-        else:
-            return False
-
-
-class RecipeSerializerPost(serializers.ModelSerializer):
+class RecipeSerializerPost(serializers.ModelSerializer,
+                           CommonRecipe):
     """
     Сериализатор модели рецептов.
     """
@@ -192,8 +220,6 @@ class RecipeSerializerPost(serializers.ModelSerializer):
     ingredients = IngredientAmountRecipeSerializer(
         source='ingredientrecipes', many=True)
     image = Base64ImageField(max_length=None, use_url=False,)
-    is_in_shopping_cart = serializers.SerializerMethodField()
-    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         """
@@ -203,32 +229,6 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         fields = ('id', 'author', 'name', 'image', 'text',
                   'ingredients', 'tags', 'cooking_time',
                   'is_in_shopping_cart', 'is_favorited')
-
-    def get_is_favorited(self, obj):
-        """
-        Метод обработки параметра is_favorited избранного.
-        """
-        request = self.context.get('request')
-        recipe = get_object_or_404(Recipe, id=obj.id)
-        if request.user.username == '':
-            return False
-        if Favorite.objects.filter(user=request.user, recipe=recipe).exists():
-            return True
-        else:
-            return False
-
-    def get_is_in_shopping_cart(self, obj):
-        """
-        Метод обработки параметра is_in_shopping_cart в корзине.
-        """
-        request = self.context.get('request')
-        recipe = get_object_or_404(Recipe, id=obj.id)
-        if request.user.username == '':
-            return False
-        if Cart.objects.filter(user=request.user, recipe=recipe).exists():
-            return True
-        else:
-            return False
 
     def create(self, validated_data):
         """
@@ -277,7 +277,7 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         IngredientRecipe.objects.filter(recipe=instance).delete()
         for ingredient in ingredients:
             ingredientrecipe = IngredientRecipe.objects.create(
-                ingredient_id=ingredient['id'],
+                ingredient__id=ingredient['id'],
                 recipe=instance)
             ingredientrecipe.amount = ingredient['amount']
             ingredientrecipe.save()
@@ -298,7 +298,8 @@ class RecipeMinifieldSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'cooking_time', 'image')
 
 
-class SubscribeSerializer(serializers.Serializer):
+class SubscribeSerializer(serializers.Serializer,
+                          CommonSubscribed, CommonCount):
     """
     Сериализатор создания подписок.
     """
@@ -307,37 +308,15 @@ class SubscribeSerializer(serializers.Serializer):
     username = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    is_subscribed = serializers.SerializerMethodField()
     recipes = RecipeMinifieldSerializer(many=True, read_only=True)
-    recipes_count = serializers.SerializerMethodField()
-
-    def get_recipes_count(self, obj):
-        """
-        Метод подсчета количества рецептов автора.
-        """
-        return Recipe.objects.filter(author__id=obj.id).count()
-
-    def get_is_subscribed(self, obj):
-        """
-        Метод обработки параметра is_subscribed подписок.
-        """
-        request = self.context.get('request')
-        if request.user.username == '':
-            return False
-        if Subscribe.objects.filter(
-                user=request.user, following__id=obj.id).exists():
-            return True
-        else:
-            return False
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
+class SubscriptionSerializer(serializers.ModelSerializer,
+                             CommonSubscribed, CommonCount):
     """
     Сериализатор для списка подписок.
     """
-    is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         """
@@ -360,22 +339,3 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         else:
             queryset = Recipe.objects.filter(author__id=obj.id).order_by('id')
         return RecipeMinifieldSerializer(queryset, many=True).data
-
-    def get_recipes_count(self, obj):
-        """
-        Метод подсчета количества рецептов автора.
-        """
-        return Recipe.objects.filter(author__id=obj.id).count()
-
-    def get_is_subscribed(self, obj):
-        """
-        Метод обработки параметра is_subscribed подписок.
-        """
-        if self.context['request'].user.username == '':
-            return False
-        if Subscribe.objects.filter(
-                user=self.context['request'].user,
-                following__id=obj.id).exists():
-            return True
-        else:
-            return False

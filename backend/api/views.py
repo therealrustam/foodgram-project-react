@@ -2,6 +2,8 @@
 Создание view классов обработки запросов.
 """
 
+from http import HTTPStatus
+
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
@@ -14,6 +16,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import filters, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import User
 
@@ -29,43 +32,22 @@ class CreateUserView(UserViewSet):
     """
     Вьюсет обработки моделей пользователя.
     """
-    queryset = User.objects.all()
     serializer_class = RegistrationSerializer
 
-    def list(self, request):
-        """
-        Метод создание списка пользователей.
-        """
-        queryset = User.objects.all()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = RegistrationSerializer(queryset,
-                                            many=True,
-                                            context={'request': request})
-        return Response(serializer.data)
+    def get_queryset(self):
+        return User.objects.all()
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):
     """
     Вьюсет обработки моделей подписок.
     """
-    serializer_class = SubscribeSerializer
+    serializer_class = SubscriptionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def list(self, request, *args, **kwargs):
-        """
-        Метод создания списка авторов,
-        на которых подписан текущий пользователь.
-        """
-        queryset = get_list_or_404(User, following__user=self.request.user)
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = SubscriptionSerializer(
-                page, many=True, context={'request': request})
-            return self.get_paginated_response(serializer.data)
-        return Response(serializer.data)
+    @action(detail=False)
+    def get_queryset(self):
+        return get_list_or_404(User, following__user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         """
@@ -75,7 +57,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(User, id=user_id)
         Subscribe.objects.create(
             user=request.user, following=user)
-        return Response(status=201)
+        return Response(HTTPStatus.CREATED)
 
     def delete(self, request, *args, **kwargs):
         """
@@ -86,7 +68,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         subscribe = get_object_or_404(
             Subscribe, user__id=user_id, following__id=author_id)
         subscribe.delete()
-        return Response(status=204)
+        return Response(HTTPStatus.NO_CONTENT)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -132,12 +114,10 @@ class IngredientViewSet(viewsets.ModelViewSet):
     search_fields = ('^name',)
 
 
-class CartViewSet(viewsets.ModelViewSet):
+class CommonViewSet(viewsets.ModelViewSet):
     """
     Вьюсет обработки модели корзины.
     """
-    queryset = Cart.objects.all()
-    serializer_class = CartSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
@@ -145,51 +125,46 @@ class CartViewSet(viewsets.ModelViewSet):
         Метод удаления модели корзины.
         """
         recipe_id = int(self.kwargs['recipes_id'])
+        print()
+        if 'shopping_cart' in str(request):
+            model = Cart
+        else:
+            model = Favorite
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        Cart.objects.create(
-            user=request.user, recipes=recipe)
-        return Response(status=201)
+        model.objects.create(
+            user=request.user, recipe=recipe)
+        return Response(HTTPStatus.CREATED)
 
     def delete(self, request, *args, **kwargs):
         """
         Метод удаления объектов модели корзины.
         """
-        recipes_id = self.kwargs['recipes_id']
+        recipe_id = self.kwargs['recipes_id']
+        if 'shopping_cart' in str(request):
+            model = Cart
+        else:
+            model = Favorite
         user_id = request.user.id
         cart = get_object_or_404(
-            Cart, user__id=user_id, recipes__id=recipes_id)
+            model, user__id=user_id, recipe__id=recipe_id)
         cart.delete()
-        return Response(status=204)
+        return Response(HTTPStatus.NO_CONTENT)
 
 
-class FavoriteViewSet(viewsets.ModelViewSet):
+class CartViewSet(CommonViewSet):
+    """
+    Вьюсет обработки модели корзины.
+    """
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+
+
+class FavoriteViewSet(CommonViewSet):
     """
     Вьюсет обработки модели избранных рецептов.
     """
     queryset = Favorite.objects.all()
     serializer_class = FavoriteSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        """
-        Метод создания избранных рецептов.
-        """
-        recipe_id = int(self.kwargs['recipes_id'])
-        recipe = get_object_or_404(Recipe, id=recipe_id)
-        Favorite.objects.create(
-            user=request.user, recipe=recipe)
-        return Response(status=201)
-
-    def delete(self, request, *args, **kwargs):
-        """
-        Метод удаления модели избранных рецептов.
-        """
-        recipe_id = self.kwargs['recipes_id']
-        user_id = request.user.id
-        favorite = get_object_or_404(
-            Favorite, user__id=user_id, recipe__id=recipe_id)
-        favorite.delete()
-        return Response(status=204)
 
 
 class DownloadCart(viewsets.ModelViewSet):
@@ -198,7 +173,7 @@ class DownloadCart(viewsets.ModelViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @ staticmethod
+    @staticmethod
     def canvas_method(dictionary):
         """
         Метод сохранения списка покупок в формате PDF.
