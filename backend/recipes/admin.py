@@ -61,7 +61,7 @@ class CartAdmin(admin.ModelAdmin):
     """
     Параметры админ зоны продуктовой корзины.
     """
-    list_display = ('user', 'recipes', 'id')
+    list_display = ('user', 'recipe', 'id')
     search_fields = ('user',)
     empty_value_display = '-пусто-'
     list_filter = ('user',)
@@ -71,7 +71,7 @@ class FavoriteAdmin(admin.ModelAdmin):
     """
     Параметры админ зоны избранных рецептов.
     """
-    list_display = ('user', 'recipes')
+    list_display = ('user', 'recipe')
     search_fields = ('user',)
     empty_value_display = '-пусто-'
     list_filter = ('user',)

@@ -144,8 +144,8 @@ class CartViewSet(viewsets.ModelViewSet):
         """
         Метод удаления модели корзины.
         """
-        recipes_id = int(self.kwargs['recipes_id'])
-        recipe = get_object_or_404(Recipe, id=recipes_id)
+        recipe_id = int(self.kwargs['recipes_id'])
+        recipe = get_object_or_404(Recipe, id=recipe_id)
         Cart.objects.create(
             user=request.user, recipes=recipe)
         return Response(status=201)
@@ -174,20 +174,20 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         """
         Метод создания избранных рецептов.
         """
-        recipes_id = int(self.kwargs['recipes_id'])
-        recipe = get_object_or_404(Recipe, id=recipes_id)
+        recipe_id = int(self.kwargs['recipes_id'])
+        recipe = get_object_or_404(Recipe, id=recipe_id)
         Favorite.objects.create(
-            user=request.user, recipes=recipe)
+            user=request.user, recipe=recipe)
         return Response(status=201)
 
     def delete(self, request, *args, **kwargs):
         """
         Метод удаления модели избранных рецептов.
         """
-        recipes_id = self.kwargs['recipes_id']
+        recipe_id = self.kwargs['recipes_id']
         user_id = request.user.id
         favorite = get_object_or_404(
-            Favorite, user__id=user_id, recipes__id=recipes_id)
+            Favorite, user__id=user_id, recipe__id=recipe_id)
         favorite.delete()
         return Response(status=204)
 

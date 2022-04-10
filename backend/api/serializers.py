@@ -162,7 +162,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = get_object_or_404(Recipe, id=obj.id)
         if request.user.username == '':
             return False
-        if Favorite.objects.filter(user=request.user, recipes=recipe).exists():
+        if Favorite.objects.filter(user=request.user, recipe=recipe).exists():
             return True
         else:
             return False
@@ -175,7 +175,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = get_object_or_404(Recipe, id=obj.id)
         if request.user.username == '':
             return False
-        if Cart.objects.filter(user=request.user, recipes=recipe).exists():
+        if Cart.objects.filter(user=request.user, recipe=recipe).exists():
             return True
         else:
             return False
@@ -212,7 +212,7 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         recipe = get_object_or_404(Recipe, id=obj.id)
         if request.user.username == '':
             return False
-        if Favorite.objects.filter(user=request.user, recipes=recipe).exists():
+        if Favorite.objects.filter(user=request.user, recipe=recipe).exists():
             return True
         else:
             return False
@@ -225,7 +225,7 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         recipe = get_object_or_404(Recipe, id=obj.id)
         if request.user.username == '':
             return False
-        if Cart.objects.filter(user=request.user, recipes=recipe).exists():
+        if Cart.objects.filter(user=request.user, recipe=recipe).exists():
             return True
         else:
             return False

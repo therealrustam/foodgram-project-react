@@ -107,15 +107,6 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='Продукты в рецепте',
         help_text='Выберите продукты рецепта')
-    is_favorited = models.BooleanField(
-        default=False,
-        verbose_name='Избранный рецепт',
-        help_text='Добавить рецепт в избранные')
-    is_in_shopping_cart = models.BooleanField(
-        default=False,
-        verbose_name='Продукты рецепта в корзину',
-        help_text='Добавить продукты рецепта в корзину'
-    )
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата создания',
@@ -146,7 +137,7 @@ class Cart(models.Model):
         verbose_name='Пользователь',
         help_text='Выберите пользователя'
     )
-    recipes = models.ForeignKey(
+    recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         related_name='carts',
@@ -160,12 +151,16 @@ class Cart(models.Model):
         """
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзины'
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'recipe'],
+                                    name='unique_cart')
+        ]
 
     def __str__(self):
         """"
         Метод строкового представления модели.
         """
-        return f'{self.user} {self.recipes}'
+        return f'{self.user} {self.recipe}'
 
 
 class Subscribe(models.Model):
@@ -193,6 +188,10 @@ class Subscribe(models.Model):
         """
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'following'],
+                                    name='unique_subscribe')
+        ]
 
     def __str__(self):
         """"
@@ -231,6 +230,10 @@ class IngredientRecipe(models.Model):
         """
         verbose_name = 'Продукты в рецепте'
         verbose_name_plural = 'Продукты в рецепте'
+        constraints = [
+            models.UniqueConstraint(fields=['ingredient', 'recipe'],
+                                    name='unique_ingredientrecipe')
+        ]
 
     def __str__(self):
         """"
@@ -261,6 +264,10 @@ class TagRecipe(models.Model):
         """
         verbose_name = 'Теги рецепта'
         verbose_name_plural = 'Теги рецепта'
+        constraints = [
+            models.UniqueConstraint(fields=['tag', 'recipe'],
+                                    name='unique_tagrecipe')
+        ]
 
     def __str__(self):
         """"
@@ -279,7 +286,7 @@ class Favorite(models.Model):
         verbose_name='Пользователь',
         help_text='Выберите пользователя'
     )
-    recipes = models.ForeignKey(
+    recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         related_name='favorites',
@@ -294,7 +301,7 @@ class Favorite(models.Model):
         verbose_name = 'Избранный'
         verbose_name_plural = 'Избранные'
         constraints = [
-            models.UniqueConstraint(fields=['user', 'recipes'],
+            models.UniqueConstraint(fields=['user', 'recipe'],
                                     name='unique_favorite')
         ]
 
@@ -302,4 +309,4 @@ class Favorite(models.Model):
         """"
         Метод строкового представления модели.
         """
-        return f'{self.recipes} {self.user}'
+        return f'{self.recipe} {self.user}'
