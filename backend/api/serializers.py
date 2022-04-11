@@ -34,7 +34,7 @@ class CommonSubscribed(metaclass=serializers.SerializerMetaclass):
 class CommonRecipe(metaclass=serializers.SerializerMetaclass):
     """
     Класс для определения избранных
-    рецептов и рецептов в корзине.
+    рецептов и продуктов в корзине.
     """
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -139,8 +139,8 @@ class IngredientAmountRecipeSerializer(serializers.ModelSerializer):
     """
     Создание сериализатора продуктов с количеством.
     """
-    id = serializers.IntegerField()
-    amount = serializers.IntegerField()
+    id = serializers.IntegerField()      # без данных полей не работает
+    amount = serializers.IntegerField()  # без данных полей не работает
 
     class Meta:
         """
