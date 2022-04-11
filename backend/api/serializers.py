@@ -229,6 +229,40 @@ class RecipeSerializerPost(serializers.ModelSerializer,
                   'ingredients', 'tags', 'cooking_time',
                   'is_in_shopping_cart', 'is_favorited')
 
+    def validate_id(self, id):
+        """
+        Метод валидации ID продуктов.
+        """
+        if not Ingredient.objects.filter(id=id).exists():
+            raise serializers.ValidationError('Данного продукта нет в базе!')
+        return id
+
+    def validate_amount(self, amount):
+        """
+        Метод валидации количества продуктов в рецепте.
+        """
+        if amount < 1:
+            raise serializers.ValidationError(
+                'Количество должно быть больше 1!')
+        return amount
+
+    def common_method(self, tags_data, ingredients, recipe):
+        """
+        Метод выполнения общих функции
+        для создания и изменения рецептов.
+        """
+        for tag_data in tags_data:
+            recipe.tags.add(tag_data)
+            recipe.save()
+        for ingredient in ingredients:
+            ingredientrecipe = IngredientRecipe.objects.create(
+                ingredient_id=self.validate_id(ingredient['id']),
+                recipe=recipe)
+            ingredientrecipe.amount = self.validate_amount(
+                ingredient['amount'])
+            ingredientrecipe.save()
+        return recipe
+
     def create(self, validated_data):
         """
         Метод создания рецептов.
@@ -247,39 +281,19 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             text=text,
             cooking_time=cooking_time,
         )
-        for tag in tags_data:
-            recipe.tags.add(tag)
-        for ingredient in ingredients:
-            IngredientRecipe.objects.create(
-                ingredient_id=ingredient['id'],
-                recipe=recipe,
-                amount=ingredient['amount'],
-            )
+        recipe = self.common_method(tags_data, ingredients, recipe)
         return recipe
 
     def update(self, instance, validated_data):
         """
         Метод редактирования рецептов.
         """
-        instance.name = validated_data.get('name', instance.name)
-        instance.image = validated_data.get('image', instance.image)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get(
-            'cooking_time', instance.cooking_time)
-        instance.save()
         tags_data = validated_data.pop('tags')
-        TagRecipe.objects.filter(recipe=instance).delete()
-        for tag_data in tags_data:
-            instance.tags.add(tag_data)
-            instance.save()
         ingredients = validated_data.pop('ingredientrecipes')
+        TagRecipe.objects.filter(recipe=instance).delete()
         IngredientRecipe.objects.filter(recipe=instance).delete()
-        for ingredient in ingredients:
-            ingredientrecipe = IngredientRecipe.objects.create(
-                ingredient__id=ingredient['id'],
-                recipe=instance)
-            ingredientrecipe.amount = ingredient['amount']
-            ingredientrecipe.save()
+        instance = self.common_method(tags_data, ingredients, instance)
+        super().update(instance, validated_data)
         instance.save()
         return instance
 
@@ -295,19 +309,6 @@ class RecipeMinifieldSerializer(serializers.ModelSerializer):
         """
         model = Recipe
         fields = ('id', 'name', 'cooking_time', 'image')
-
-
-class SubscribeSerializer(serializers.Serializer,
-                          CommonSubscribed, CommonCount):
-    """
-    Сериализатор создания подписок.
-    """
-    email = serializers.EmailField()
-    id = serializers.IntegerField()
-    username = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    recipes = RecipeMinifieldSerializer(many=True, read_only=True)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer,

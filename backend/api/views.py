@@ -9,8 +9,6 @@ from django.http import HttpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
-                            Recipe, Subscribe, Tag)
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -18,14 +16,15 @@ from reportlab.pdfgen import canvas
 from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from users.models import User
 
+from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
+                            Recipe, Subscribe, Tag)
+from users.models import User
 from .filters import RecipeFilters
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeSerializer,
                           RecipeSerializerPost, RegistrationSerializer,
-                          SubscribeSerializer, SubscriptionSerializer,
-                          TagSerializer)
+                          SubscriptionSerializer, TagSerializer)
 
 
 class CreateUserView(UserViewSet):
@@ -188,7 +187,7 @@ class DownloadCart(viewsets.ModelViewSet):
         begin_position_x, begin_position_y = 40, 650
         sheet = canvas.Canvas(response, pagesize=A4)
         pdfmetrics.registerFont(TTFont('FreeSans',
-                                       'media/FreeSans.ttf'))
+                                       'data/FreeSans.ttf'))
         sheet.setFont('FreeSans', 50)
         sheet.setTitle('Список покупок')
         sheet.drawString(begin_position_x,
@@ -211,7 +210,7 @@ class DownloadCart(viewsets.ModelViewSet):
         sheet.save()
         return response
 
-    def list(self, request):
+    def download(self, request):
         """
         Метод создания списка покупок.
         """
