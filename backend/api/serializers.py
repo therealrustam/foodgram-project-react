@@ -258,7 +258,6 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             recipe.tags.add(tag_data)
             recipe.save()
         for ingredient in ingredients:
-            print(ingredient)
             ingredientrecipe = IngredientRecipe.objects.create(
                 ingredient_id=self.validate_ingredient(
                     ingredient['ingredient']['id'], recipe),
