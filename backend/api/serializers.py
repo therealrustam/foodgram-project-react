@@ -229,7 +229,7 @@ class RecipeSerializerPost(serializers.ModelSerializer,
                   'ingredients', 'tags', 'cooking_time',
                   'is_in_shopping_cart', 'is_favorited')
 
-    def validate_id(self, id):
+    def validate_ingredient(self, id):
         """
         Метод валидации ID продуктов.
         """
@@ -256,7 +256,7 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             recipe.save()
         for ingredient in ingredients:
             ingredientrecipe = IngredientRecipe.objects.create(
-                ingredient_id=self.validate_id(ingredient['id']),
+                ingredient_id=self.validate_ingredient(ingredient['id']),
                 recipe=recipe)
             ingredientrecipe.amount = self.validate_amount(
                 ingredient['amount'])

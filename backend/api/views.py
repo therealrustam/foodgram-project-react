@@ -44,7 +44,6 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     serializer_class = SubscriptionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False)
     def get_queryset(self):
         return get_list_or_404(User, following__user=self.request.user)
 
@@ -122,30 +121,21 @@ class CommonViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, model, *args, **kwargs):
         """
         Метод создания модели корзины или избранных рецептов.
         """
         recipe_id = int(self.kwargs['recipes_id'])
-        print()
-        if 'shopping_cart' in str(request):
-            model = Cart
-        else:
-            model = Favorite
         recipe = get_object_or_404(Recipe, id=recipe_id)
         model.objects.create(
             user=request.user, recipe=recipe)
         return Response(HTTPStatus.CREATED)
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request, model, *args, **kwargs):
         """
         Метод удаления объектов модели корзины или избранных рецептов..
         """
         recipe_id = self.kwargs['recipes_id']
-        if 'shopping_cart' in str(request):
-            model = Cart
-        else:
-            model = Favorite
         user_id = request.user.id
         cart = get_object_or_404(
             model, user__id=user_id, recipe__id=recipe_id)
@@ -160,6 +150,14 @@ class CartViewSet(CommonViewSet):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
 
+    def create(self, request, *args, **kwargs):
+        model = Cart
+        return super().create(request, model, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        model = Cart
+        return super().delete(request, model, *args, **kwargs)
+
 
 class FavoriteViewSet(CommonViewSet):
     """
@@ -167,6 +165,14 @@ class FavoriteViewSet(CommonViewSet):
     """
     queryset = Favorite.objects.all()
     serializer_class = FavoriteSerializer
+
+    def create(self, request, *args, **kwargs):
+        model = Favorite
+        return super().create(request, model, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        model = Favorite
+        return super().delete(request, model, *args, **kwargs)
 
 
 class DownloadCart(viewsets.ModelViewSet):
