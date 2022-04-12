@@ -32,9 +32,9 @@ class UserAdmin(admin.ModelAdmin):
     Параметры админ зоны пользователя.
     """
     list_display = ('username', 'email', 'id')
-    search_fields = ('username',)
+    search_fields = ('username', 'email')
     empty_value_display = '-пусто-'
-    list_filter = ('username',)
+    list_filter = ('username', 'email')
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -81,12 +81,21 @@ class RecipeAdmin(admin.ModelAdmin):
     """
     Параметры админ зоны рецептов.
     """
+
     inlines = (IngredientRecipeInline, TagRecipeInline,)
-    list_display = ('name', 'author', 'text',
-                    'cooking_time', 'id', 'pub_date')
-    search_fields = ('name',)
+    list_display = ('name', 'author', 'cooking_time',
+                    'id', 'count_favorite', 'pub_date')
+    search_fields = ('name', 'author', 'tags')
     empty_value_display = '-пусто-'
-    list_filter = ('name',)
+    list_filter = ('name', 'author', 'tags')
+
+    def count_favorite(self, obj):
+        """
+        Метод для подсчета общего числа
+        добавлений этого рецепта в избранное.
+        """
+        return Favorite.objects.filter(recipe=obj).count()
+    count_favorite.short_description = 'Число добавлении в избранное'
 
 
 class SubscribeAdmin(admin.ModelAdmin):
