@@ -246,7 +246,7 @@ class RecipeSerializerPost(serializers.ModelSerializer,
         """
         if amount < 1:
             raise serializers.ValidationError(
-                'Количество должно быть больше 1!')
+                'Количество должно быть равно или больше 1!')
         return amount
 
     def add_tag_ingredient(self, tags_data, ingredients, recipe):
