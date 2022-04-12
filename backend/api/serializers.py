@@ -119,7 +119,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
     """
-    Создание сериализатора модели продуктов в рецепте.
+    Создание сериализатора модели продуктов в рецепте для чтения.
     """
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
@@ -137,16 +137,15 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
 class IngredientAmountRecipeSerializer(serializers.ModelSerializer):
     """
-    Создание сериализатора продуктов с количеством.
+    Создание сериализатора продуктов с количеством для записи.
     """
-    id = serializers.IntegerField()      # без данных полей не работает
-    amount = serializers.IntegerField()  # без данных полей не работает
+    id = serializers.IntegerField(source='ingredient.id')
 
     class Meta:
         """
         Мета параметры сериализатора продуктов с количеством.
         """
-        model = Ingredient
+        model = IngredientRecipe
         fields = ('id', 'amount')
 
 
@@ -229,12 +228,16 @@ class RecipeSerializerPost(serializers.ModelSerializer,
                   'ingredients', 'tags', 'cooking_time',
                   'is_in_shopping_cart', 'is_favorited')
 
-    def validate_ingredient(self, id):
+    def validate_ingredient(self, id, recipe):
         """
-        Метод валидации ID продуктов.
+        Метод валидации продуктов в рецепте.
         """
         if not Ingredient.objects.filter(id=id).exists():
             raise serializers.ValidationError('Данного продукта нет в базе!')
+        if IngredientRecipe.objects.filter(ingredient__id=id,
+                                           recipe=recipe).exists():
+            raise serializers.ValidationError(
+                'Данный продукт уже есть в рецепте!')
         return id
 
     def validate_amount(self, amount):
@@ -246,7 +249,7 @@ class RecipeSerializerPost(serializers.ModelSerializer,
                 'Количество должно быть больше 1!')
         return amount
 
-    def common_method(self, tags_data, ingredients, recipe):
+    def add_tag_ingredient(self, tags_data, ingredients, recipe):
         """
         Метод выполнения общих функции
         для создания и изменения рецептов.
@@ -255,8 +258,10 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             recipe.tags.add(tag_data)
             recipe.save()
         for ingredient in ingredients:
+            print(ingredient)
             ingredientrecipe = IngredientRecipe.objects.create(
-                ingredient_id=self.validate_ingredient(ingredient['id']),
+                ingredient_id=self.validate_ingredient(
+                    ingredient['ingredient']['id'], recipe),
                 recipe=recipe)
             ingredientrecipe.amount = self.validate_amount(
                 ingredient['amount'])
@@ -281,7 +286,7 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             text=text,
             cooking_time=cooking_time,
         )
-        recipe = self.common_method(tags_data, ingredients, recipe)
+        recipe = self.add_tag_ingredient(tags_data, ingredients, recipe)
         return recipe
 
     def update(self, instance, validated_data):
@@ -292,7 +297,7 @@ class RecipeSerializerPost(serializers.ModelSerializer,
         ingredients = validated_data.pop('ingredientrecipes')
         TagRecipe.objects.filter(recipe=instance).delete()
         IngredientRecipe.objects.filter(recipe=instance).delete()
-        instance = self.common_method(tags_data, ingredients, instance)
+        instance = self.add_tag_ingredient(tags_data, ingredients, instance)
         super().update(instance, validated_data)
         instance.save()
         return instance

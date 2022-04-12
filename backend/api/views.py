@@ -14,7 +14,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import filters, permissions, viewsets
-from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
@@ -115,9 +114,9 @@ class IngredientViewSet(viewsets.ModelViewSet):
     search_fields = ('^name',)
 
 
-class CommonViewSet(viewsets.ModelViewSet):
+class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
     """
-    Общий вьюсет обработки модели корзины и избранных рецептов.
+    Базовый вьюсет обработки модели корзины и избранных рецептов.
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -143,36 +142,34 @@ class CommonViewSet(viewsets.ModelViewSet):
         return Response(HTTPStatus.NO_CONTENT)
 
 
-class CartViewSet(CommonViewSet):
+class CartViewSet(BaseFavoriteCartViewSet):
     """
     Вьюсет обработки модели корзины.
     """
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
+    model = Cart
 
     def create(self, request, *args, **kwargs):
-        model = Cart
-        return super().create(request, model, *args, **kwargs)
+        return super().create(request, self.model, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        model = Cart
-        return super().delete(request, model, *args, **kwargs)
+        return super().delete(request, self.model, *args, **kwargs)
 
 
-class FavoriteViewSet(CommonViewSet):
+class FavoriteViewSet(BaseFavoriteCartViewSet):
     """
     Вьюсет обработки модели избранных рецептов.
     """
     queryset = Favorite.objects.all()
     serializer_class = FavoriteSerializer
+    model = Favorite
 
     def create(self, request, *args, **kwargs):
-        model = Favorite
-        return super().create(request, model, *args, **kwargs)
+        return super().create(request, self.model, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        model = Favorite
-        return super().delete(request, model, *args, **kwargs)
+        return super().delete(request, self.model, *args, **kwargs)
 
 
 class DownloadCart(viewsets.ModelViewSet):
