@@ -148,6 +148,20 @@ class IngredientAmountRecipeSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = ('id', 'amount')
 
+    def validate_id(self, value):
+        """
+        Метод валидации ID продуктов в рецепте.
+        """
+        if not Ingredient.objects.filter(id=value).exists():
+            raise serializers.ValidationError('Данного продукта нет в базе!')
+        return value
+
+    def validate_amount(self, value):
+        """
+        Метод валидации количества продуктов в рецепте.
+        """
+        return value
+
 
 class TagSerializer(serializers.ModelSerializer):
     """
@@ -228,28 +242,17 @@ class RecipeSerializerPost(serializers.ModelSerializer,
                   'ingredients', 'tags', 'cooking_time',
                   'is_in_shopping_cart', 'is_favorited')
 
-    def validate_ingredient(self, id, recipe):
+    def validate_double(self, id, recipe):
         """
-        Метод валидации продуктов в рецепте.
+        Метод валидации одинаковых продуктов в рецепте.
         """
-        if not Ingredient.objects.filter(id=id).exists():
-            raise serializers.ValidationError('Данного продукта нет в базе!')
         if IngredientRecipe.objects.filter(ingredient__id=id,
                                            recipe=recipe).exists():
             raise serializers.ValidationError(
                 'Данный продукт уже есть в рецепте!')
         return id
 
-    def validate_amount(self, amount):
-        """
-        Метод валидации количества продуктов в рецепте.
-        """
-        if amount < 1:
-            raise serializers.ValidationError(
-                'Количество должно быть равно или больше 1!')
-        return amount
-
-    def add_tag_ingredient(self, tags_data, ingredients, recipe):
+    def add_tags_and_ingredients(self, tags_data, ingredients, recipe):
         """
         Метод выполнения общих функции
         для создания и изменения рецептов.
@@ -259,11 +262,10 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             recipe.save()
         for ingredient in ingredients:
             ingredientrecipe = IngredientRecipe.objects.create(
-                ingredient_id=self.validate_ingredient(
+                ingredient_id=self.validate_double(
                     ingredient['ingredient']['id'], recipe),
                 recipe=recipe)
-            ingredientrecipe.amount = self.validate_amount(
-                ingredient['amount'])
+            ingredientrecipe.amount = ingredient['amount']
             ingredientrecipe.save()
         return recipe
 
@@ -285,7 +287,7 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             text=text,
             cooking_time=cooking_time,
         )
-        recipe = self.add_tag_ingredient(tags_data, ingredients, recipe)
+        recipe = self.add_tags_and_ingredients(tags_data, ingredients, recipe)
         return recipe
 
     def update(self, instance, validated_data):
@@ -296,7 +298,8 @@ class RecipeSerializerPost(serializers.ModelSerializer,
         ingredients = validated_data.pop('ingredientrecipes')
         TagRecipe.objects.filter(recipe=instance).delete()
         IngredientRecipe.objects.filter(recipe=instance).delete()
-        instance = self.add_tag_ingredient(tags_data, ingredients, instance)
+        instance = self.add_tags_and_ingredients(
+            tags_data, ingredients, instance)
         super().update(instance, validated_data)
         instance.save()
         return instance

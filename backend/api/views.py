@@ -120,25 +120,25 @@ class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def create(self, request, model, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
         Метод создания модели корзины или избранных рецептов.
         """
         recipe_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        model.objects.create(
+        self.model.objects.create(
             user=request.user, recipe=recipe)
         return Response(HTTPStatus.CREATED)
 
-    def delete(self, request, model, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         """
         Метод удаления объектов модели корзины или избранных рецептов..
         """
         recipe_id = self.kwargs['recipes_id']
         user_id = request.user.id
-        cart = get_object_or_404(
-            model, user__id=user_id, recipe__id=recipe_id)
-        cart.delete()
+        object = get_object_or_404(
+            self.model, user__id=user_id, recipe__id=recipe_id)
+        object.delete()
         return Response(HTTPStatus.NO_CONTENT)
 
 
