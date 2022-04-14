@@ -193,7 +193,7 @@ class DownloadCart(viewsets.ModelViewSet):
         sheet.setFont('FreeSans', 50)
         sheet.setTitle('Список покупок')
         sheet.drawString(begin_position_x,
-                         begin_position_y+40, 'Список покупок: ')
+                         begin_position_y + 40, 'Список покупок: ')
         sheet.setFont('FreeSans', 24)
         for number, item in enumerate(dictionary, start=1):
             if begin_position_y < 100:
