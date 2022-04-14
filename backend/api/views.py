@@ -26,6 +26,9 @@ from .serializers import (CartSerializer, FavoriteSerializer,
                           SubscriptionSerializer, TagSerializer)
 
 
+MODEL = {1: None}
+
+
 class CreateUserView(UserViewSet):
     """
     Вьюсет обработки моделей пользователя.
@@ -126,7 +129,7 @@ class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
         """
         recipe_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        self.model.objects.create(
+        MODEL[1].objects.create(
             user=request.user, recipe=recipe)
         return Response(HTTPStatus.CREATED)
 
@@ -137,7 +140,7 @@ class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
         recipe_id = self.kwargs['recipes_id']
         user_id = request.user.id
         object = get_object_or_404(
-            self.model, user__id=user_id, recipe__id=recipe_id)
+            MODEL[1], user__id=user_id, recipe__id=recipe_id)
         object.delete()
         return Response(HTTPStatus.NO_CONTENT)
 
@@ -146,30 +149,26 @@ class CartViewSet(BaseFavoriteCartViewSet):
     """
     Вьюсет обработки модели корзины.
     """
-    queryset = Cart.objects.all()
+
+    def __init__(self):
+        """Конструктор класса."""
+        MODEL[1] = Cart
+
     serializer_class = CartSerializer
-    model = Cart
-
-    def create(self, request, *args, **kwargs):
-        return super().create(request, self.model, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        return super().delete(request, self.model, *args, **kwargs)
+    queryset = Cart.objects.all()
 
 
 class FavoriteViewSet(BaseFavoriteCartViewSet):
     """
     Вьюсет обработки модели избранных рецептов.
     """
-    queryset = Favorite.objects.all()
+
+    def __init__(self):
+        """Конструктор класса."""
+        MODEL[1] = Favorite
+
     serializer_class = FavoriteSerializer
-    model = Favorite
-
-    def create(self, request, *args, **kwargs):
-        return super().create(request, self.model, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        return super().delete(request, self.model, *args, **kwargs)
+    queryset = Favorite.objects.all()
 
 
 class DownloadCart(viewsets.ModelViewSet):
