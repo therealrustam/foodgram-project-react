@@ -114,7 +114,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     pagination_class = None
-    search_fields = ('^name',)
+    search_fields = ('^name', '@name')
 
 
 class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
@@ -149,11 +149,7 @@ class CartViewSet(BaseFavoriteCartViewSet):
     """
     Вьюсет обработки модели корзины.
     """
-
-    def __init__(self):
-        """Конструктор класса."""
-        MODEL[1] = Cart
-
+    MODEL[1] = Cart
     serializer_class = CartSerializer
     queryset = Cart.objects.all()
 
@@ -162,11 +158,7 @@ class FavoriteViewSet(BaseFavoriteCartViewSet):
     """
     Вьюсет обработки модели избранных рецептов.
     """
-
-    def __init__(self):
-        """Конструктор класса."""
-        MODEL[1] = Favorite
-
+    MODEL[1] = Favorite
     serializer_class = FavoriteSerializer
     queryset = Favorite.objects.all()
 
