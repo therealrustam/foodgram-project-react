@@ -6,8 +6,8 @@ WORKDIR /app
 
 COPY backend/requirements.txt pwd
 
-RUN pip3 install --upgrade pip && pip3 install -r backend/requirements.txt --no-cache-dir
+RUN pip3 install --upgrade pip && pip3 install -r /app/backend/requirements.txt --no-cache-dir
 
-WORKDIR /app
+WORKDIR /app/backend/
 
 CMD gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000 
