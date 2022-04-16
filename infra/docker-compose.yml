@@ -10,7 +10,7 @@ services:
     restart: always
 
   frontend:
-    image: therealrustam/foodgram_front:latest
+    image: therealrustam/foodgram_front:v14.04.2022
     volumes:
       - result_build:/app/result_build/build
 
