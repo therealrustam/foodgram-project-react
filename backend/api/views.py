@@ -119,26 +119,27 @@ class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
     Базовый вьюсет обработки модели корзины и избранных рецептов.
     """
     permission_classes = [permissions.IsAuthenticated]
-    model = None
 
     def create(self, request, *args, **kwargs):
         """
         Метод создания модели корзины или избранных рецептов.
         """
+        model = type(self.queryset[0])
         recipe_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        self.model.objects.create(
+        model.objects.create(
             user=request.user, recipe=recipe)
         return Response(HTTPStatus.CREATED)
 
     def delete(self, request, *args, **kwargs):
         """
-        Метод удаления объектов модели корзины или избранных рецептов..
+        Метод удаления объектов модели корзины или избранных рецептов.
         """
+        model = type(self.queryset[0])
         recipe_id = self.kwargs['recipes_id']
         user_id = request.user.id
         object = get_object_or_404(
-            self.model, user__id=user_id, recipe__id=recipe_id)
+            model, user__id=user_id, recipe__id=recipe_id)
         object.delete()
         return Response(HTTPStatus.NO_CONTENT)
 
@@ -147,7 +148,6 @@ class CartViewSet(BaseFavoriteCartViewSet):
     """
     Вьюсет обработки модели корзины.
     """
-    BaseFavoriteCartViewSet.model = Cart
     serializer_class = CartSerializer
     queryset = Cart.objects.all()
 
@@ -156,7 +156,6 @@ class FavoriteViewSet(BaseFavoriteCartViewSet):
     """
     Вьюсет обработки модели избранных рецептов.
     """
-    BaseFavoriteCartViewSet.model = Favorite
     serializer_class = FavoriteSerializer
     queryset = Favorite.objects.all()
 
