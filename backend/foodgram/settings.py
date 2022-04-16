@@ -13,7 +13,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = '%mrc%(17o5jdd2$xunh19h)7mg9ys79ue)-79w$hjz@^%^pja0'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['51.250.101.162', 'foodgram.serveblog.net', 'localhost', ]
 

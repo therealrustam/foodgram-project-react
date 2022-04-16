@@ -33,8 +33,8 @@ services:
     depends_on:
       - db
     volumes:
-      - static_value:/code/staticfiles/
-      - media_value:/code/media/
+      - static_value:/app/backend/staticfiles/
+      - media_value:/app/backend/media/
     env_file:
       - ./.env
 
