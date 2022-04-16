@@ -1,6 +1,26 @@
 version: '3.8'
 
 services:
+  frontend:
+    image: therealrustam/foodgram_front:v14.04.2022
+    volumes:
+      - ../frontend/:/app/result_build/
+
+  nginx:
+    image: nginx:1.21.3-alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ../frontend/build:/usr/share/nginx/html/
+      - ../docs/:/usr/share/nginx/html/api/docs/
+      - static_value:/var/html/staticfiles/
+      - media_value:/var/html/media/
+      - ./docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
+      - ./docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
+    depends_on:
+      - backend
+
   db:
     env_file:
       - .env
@@ -9,32 +29,13 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     restart: always
 
-  frontend:
-    image: therealrustam/foodgram_front:v14.04.2022
-    volumes:
-      - result_build:/app/result_build/build
-
-  nginx:
-    image: nginx:1.21.3-alpine
-    ports:
-      - '80:80'
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - static_value:/static/
-      - media_value:/media/
-      - result_build:/usr/share/nginx/html/
-      - ./docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
-      - ./docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
-    depends_on:
-      - frontend
-
   backend:
     image: therealrustam/foodgram:latest
     restart: always
     depends_on:
       - db
     volumes:
-      - static_value:/code/static/
+      - static_value:/code/staticfiles/
       - media_value:/code/media/
     env_file:
       - ./.env
