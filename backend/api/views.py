@@ -124,10 +124,9 @@ class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
         """
         Метод создания модели корзины или избранных рецептов.
         """
-        model = type(self.queryset[0])
         recipe_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        model.objects.create(
+        self.model.objects.create(
             user=request.user, recipe=recipe)
         return Response(HTTPStatus.CREATED)
 
@@ -135,11 +134,10 @@ class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
         """
         Метод удаления объектов модели корзины или избранных рецептов.
         """
-        model = type(self.queryset[0])
         recipe_id = self.kwargs['recipes_id']
         user_id = request.user.id
         object = get_object_or_404(
-            model, user__id=user_id, recipe__id=recipe_id)
+            self.model, user__id=user_id, recipe__id=recipe_id)
         object.delete()
         return Response(HTTPStatus.NO_CONTENT)
 
@@ -150,6 +148,7 @@ class CartViewSet(BaseFavoriteCartViewSet):
     """
     serializer_class = CartSerializer
     queryset = Cart.objects.all()
+    model = Cart
 
 
 class FavoriteViewSet(BaseFavoriteCartViewSet):
@@ -158,6 +157,7 @@ class FavoriteViewSet(BaseFavoriteCartViewSet):
     """
     serializer_class = FavoriteSerializer
     queryset = Favorite.objects.all()
+    model = Favorite
 
 
 class DownloadCart(viewsets.ModelViewSet):
