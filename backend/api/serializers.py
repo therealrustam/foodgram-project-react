@@ -249,6 +249,16 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             ingredients_list.append(ingredient_to_check)
         return value
 
+    def validate_double(self, id, recipe):
+        """ 
+        Метод валидации одинаковых продуктов в рецепте. 
+        """
+        if IngredientRecipe.objects.filter(ingredient__id=id,
+                                           recipe=recipe).exists():
+            raise serializers.ValidationError(
+                'Данный продукт уже есть в рецепте!')
+        return id
+
     def add_tags_and_ingredients(self, tags_data, ingredients, recipe):
         """
         Метод выполнения общих функции
@@ -259,7 +269,8 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             recipe.save()
         for ingredient in ingredients:
             ingredientrecipe = IngredientRecipe.objects.create(
-                ingredient_id=ingredient['ingredient']['id'],
+                ingredient_id=self.validate_double(
+                    ingredient['ingredient']['id'], recipe),
                 recipe=recipe)
             ingredientrecipe.amount = ingredient['amount']
             ingredientrecipe.save()
