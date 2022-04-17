@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   frontend:
-    image: therealrustam/foodgram_front:v14.04.2022
+    image: therealrustam/foodgram_front:v17.04.2022
     volumes:
       - ../frontend/:/app/result_build/
 
