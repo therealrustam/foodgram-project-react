@@ -1,10 +1,32 @@
 version: '3.8'
 
 services:
+
   frontend:
     image: therealrustam/foodgram_front:v17.04.2022
     volumes:
       - ../frontend/:/app/result_build/
+
+  db:
+    env_file:
+      - .env
+    image: postgres:13.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    restart: always
+    depends_on:
+      - frontend
+
+  backend:
+    image: therealrustam/foodgram:latest
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - static_value:/app/backend/staticfiles/
+      - media_value:/app/backend/media/
+    env_file:
+      - ./.env
 
   nginx:
     image: nginx:1.21.3-alpine
@@ -18,25 +40,6 @@ services:
       - media_value:/var/html/media/
     depends_on:
       - backend
-
-  db:
-    env_file:
-      - .env
-    image: postgres:13.0-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    restart: always
-
-  backend:
-    image: therealrustam/foodgram:latest
-    restart: always
-    depends_on:
-      - db
-    volumes:
-      - static_value:/app/backend/staticfiles/
-      - media_value:/app/backend/media/
-    env_file:
-      - ./.env
 
 volumes:
 
