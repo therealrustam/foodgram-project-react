@@ -111,7 +111,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     pagination_class = None
-    search_fields = ('^name', '@name')
+    search_fields = ['^name', '@name']
 
 
 class BaseFavoriteCartViewSet(viewsets.ModelViewSet):

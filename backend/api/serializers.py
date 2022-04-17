@@ -148,6 +148,20 @@ class IngredientAmountRecipeSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = ('id', 'amount')
 
+    def validate_id(self, value):
+        """
+        Метод валидации ID продуктов в рецепте.
+        """
+        if not Ingredient.objects.filter(id=value).exists():
+            raise serializers.ValidationError('Данного продукта нет в базе!')
+        return value
+
+    def validate_amount(self, value):
+        """
+        Метод валидации количества продуктов в рецепте.
+        """
+        return value
+
 
 class TagSerializer(serializers.ModelSerializer):
     """
@@ -227,27 +241,6 @@ class RecipeSerializerPost(serializers.ModelSerializer,
         fields = ('id', 'author', 'name', 'image', 'text',
                   'ingredients', 'tags', 'cooking_time',
                   'is_in_shopping_cart', 'is_favorited')
-
-    def validate_ingredients(self, value):
-        """
-        Метод валидации продуктов в рецепте.
-        """
-        ingredients_list = []
-        ingredients = value
-        for ingredient in ingredients:
-            if ingredient['amount'] < 1:
-                raise serializers.ValidationError(
-                    'Количество должно быть равным или больше 1!')
-            id_to_check = ingredient['ingredient']['id']
-            ingredient_to_check = Ingredient.objects.filter(id=id_to_check)
-            if not ingredient_to_check.exists():
-                raise serializers.ValidationError(
-                    'Данного продукта нет в базе!')
-            if ingredient_to_check in ingredients_list:
-                raise serializers.ValidationError(
-                    'Данные продукты повторяются в рецепте!')
-            ingredients_list.append(ingredient_to_check)
-        return value
 
     def validate_double(self, id, recipe):
         """
