@@ -250,8 +250,8 @@ class RecipeSerializerPost(serializers.ModelSerializer,
         return value
 
     def validate_double(self, id, recipe):
-        """ 
-        Метод валидации одинаковых продуктов в рецепте. 
+        """
+        Метод валидации одинаковых продуктов в рецепте.
         """
         if IngredientRecipe.objects.filter(ingredient__id=id,
                                            recipe=recipe).exists():
