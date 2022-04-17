@@ -5,7 +5,7 @@ services:
   frontend:
     image: therealrustam/foodgram_front:v18.04.2022
     volumes:
-      - result_build:/app/result_build/build
+      - result_build:/app/result_build/build/
 
   db:
     env_file:
