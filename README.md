@@ -1,5 +1,3 @@
-![Foodgram](https://github.com/therealrustam/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
-
 # Проект Foodgram
 
 
@@ -67,7 +65,8 @@ build — команда сборки образа по инструкциям �
 
 
 Электронная почта: yandex@yandex.ru
-Уникальное имя: rustam
+Уникальное имя: therealrustam
 Имя: Рустам
 Фамилия: Вахитов
-Пароль: !ZakonOma
+Пароль: 1ZakonOma
+
