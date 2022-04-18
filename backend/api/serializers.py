@@ -266,6 +266,11 @@ class RecipeSerializerPost(serializers.ModelSerializer,
                     recipe=recipe)
                 ingredientrecipe.amount = ingredient['amount']
                 ingredientrecipe.save()
+            else:
+                IngredientRecipe.objects.filter(
+                    recipe=recipe).delete()
+                raise serializers.ValidationError(
+                    'Данные продукты повторяются в рецепте!')
         return recipe
 
     def create(self, validated_data):
