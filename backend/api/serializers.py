@@ -269,6 +269,7 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             else:
                 IngredientRecipe.objects.filter(
                     recipe=recipe).delete()
+                recipe.delete()
                 raise serializers.ValidationError(
                     'Данные продукты повторяются в рецепте!')
         return recipe
