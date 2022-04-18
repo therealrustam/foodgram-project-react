@@ -13,13 +13,13 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import filters, permissions, viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 
 from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
                             Recipe, Subscribe, Tag)
 from users.models import User
-from .filters import RecipeFilters
+from .filters import IngredientSearchFilter, RecipeFilters
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeSerializer,
                           RecipeSerializerPost, RegistrationSerializer,
@@ -109,9 +109,9 @@ class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = IngredientSerializer
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (DjangoFilterBackend, IngredientSearchFilter)
     pagination_class = None
-    search_fields = ['^name', '@name']
+    search_fields = ['^name', ]
 
 
 class BaseFavoriteCartViewSet(viewsets.ModelViewSet):
