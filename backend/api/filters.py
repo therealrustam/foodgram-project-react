@@ -2,13 +2,14 @@
 Настройка пользовательских фильтров.
 """
 
-from django_filters import rest_framework as filters
+from django_filters import rest_framework
+from rest_framework import filters
 
 from recipes.models import Recipe
 from users.models import User
 
 
-class RecipeFilters(filters.FilterSet):
+class RecipeFilters(rest_framework.FilterSet):
     """
     Настройка фильтров модели рецептов.
     """
